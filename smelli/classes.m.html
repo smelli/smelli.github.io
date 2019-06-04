@@ -1055,6 +1055,18 @@ table {
     <li class="set"><h3><a href="#header-classes">Classes</a></h3>
       <ul>
         <li class="mono">
+        <span class="class_name"><a href="#smelli.classes.CustomLikelihood">CustomLikelihood</a></span>
+        
+          
+  <ul>
+    <li class="mono"><a href="#smelli.classes.CustomLikelihood.__init__">__init__</a></li>
+    <li class="mono"><a href="#smelli.classes.CustomLikelihood.get_exclude_obs_dict">get_exclude_obs_dict</a></li>
+    <li class="mono"><a href="#smelli.classes.CustomLikelihood.get_number_observations">get_number_observations</a></li>
+    <li class="mono"><a href="#smelli.classes.CustomLikelihood.log_likelihood">log_likelihood</a></li>
+  </ul>
+
+        </li>
+        <li class="mono">
         <span class="class_name"><a href="#smelli.classes.GlobalLikelihood">GlobalLikelihood</a></span>
         
           
@@ -1064,6 +1076,7 @@ table {
     <li class="mono"><a href="#smelli.classes.GlobalLikelihood.load_exp_covariances">load_exp_covariances</a></li>
     <li class="mono"><a href="#smelli.classes.GlobalLikelihood.load_sm_covariances">load_sm_covariances</a></li>
     <li class="mono"><a href="#smelli.classes.GlobalLikelihood.make_measurement">make_measurement</a></li>
+    <li class="mono"><a href="#smelli.classes.GlobalLikelihood.number_observations_dict">number_observations_dict</a></li>
     <li class="mono"><a href="#smelli.classes.GlobalLikelihood.save_exp_covariances">save_exp_covariances</a></li>
     <li class="mono"><a href="#smelli.classes.GlobalLikelihood.save_sm_covariances">save_sm_covariances</a></li>
   </ul>
@@ -1075,9 +1088,11 @@ table {
           
   <ul>
     <li class="mono"><a href="#smelli.classes.GlobalLikelihoodPoint.__init__">__init__</a></li>
+    <li class="mono"><a href="#smelli.classes.GlobalLikelihoodPoint.chi2_dict">chi2_dict</a></li>
     <li class="mono"><a href="#smelli.classes.GlobalLikelihoodPoint.log_likelihood_dict">log_likelihood_dict</a></li>
     <li class="mono"><a href="#smelli.classes.GlobalLikelihoodPoint.log_likelihood_global">log_likelihood_global</a></li>
     <li class="mono"><a href="#smelli.classes.GlobalLikelihoodPoint.obstable">obstable</a></li>
+    <li class="mono"><a href="#smelli.classes.GlobalLikelihoodPoint.pvalue_dict">pvalue_dict</a></li>
   </ul>
 
         </li>
@@ -1105,7 +1120,7 @@ table {
 <span class="kn">import</span> <span class="nn">wcxf</span>
 <span class="kn">from</span> <span class="nn">flavio.statistics.likelihood</span> <span class="kn">import</span> <span class="n">Likelihood</span><span class="p">,</span> <span class="n">FastLikelihood</span>
 <span class="kn">from</span> <span class="nn">flavio.statistics.probability</span> <span class="kn">import</span> <span class="n">NormalDistribution</span>
-<span class="kn">from</span> <span class="nn">flavio.statistics.functions</span> <span class="kn">import</span> <span class="n">pull</span>
+<span class="kn">from</span> <span class="nn">flavio.statistics.functions</span> <span class="kn">import</span> <span class="n">pull</span><span class="p">,</span> <span class="n">pvalue</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
@@ -1170,7 +1185,8 @@ table {
                  <span class="n">exclude_likelihoods</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                  <span class="n">Nexp</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span>
                  <span class="n">exp_cov_folder</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                 <span class="n">sm_cov_folder</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+                 <span class="n">sm_cov_folder</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                 <span class="n">custom_likelihoods</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Initialize the likelihood.</span>
 
 <span class="sd">        Optionally, a dictionary of parameters can be passed as `par_dict`.</span>
@@ -1197,6 +1213,10 @@ table {
 <span class="sd">        - sm_cov_folder: directory containing saved SM</span>
 <span class="sd">          covariances. The data files have to be in the format exported by</span>
 <span class="sd">          `save_sm_covariances`.</span>
+<span class="sd">        - custom_likelihoods: a dictionary in which each value is a list of</span>
+<span class="sd">          observables and each key is a string that serves as user-defined</span>
+<span class="sd">          name. For each item of the dictionary, a custom likelihood will be</span>
+<span class="sd">          computed.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">eft</span> <span class="o">=</span> <span class="n">eft</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">basis</span> <span class="o">=</span> <span class="n">basis</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_bases</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">eft</span><span class="p">]</span>
@@ -1206,6 +1226,8 @@ table {
         <span class="bp">self</span><span class="o">.</span><span class="n">par_dict</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">par_dict</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">likelihoods</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fast_likelihoods</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_custom_likelihoods_dict</span> <span class="o">=</span> <span class="n">custom_likelihoods</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">custom_likelihoods</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_load_likelihoods</span><span class="p">(</span><span class="n">include_likelihoods</span><span class="o">=</span><span class="n">include_likelihoods</span><span class="p">,</span>
                                <span class="n">exclude_likelihoods</span><span class="o">=</span><span class="n">exclude_likelihoods</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_Nexp</span> <span class="o">=</span> <span class="n">Nexp</span>
@@ -1252,6 +1274,9 @@ table {
             <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_likelihood_path</span><span class="p">(</span><span class="n">fn</span><span class="p">),</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
                 <span class="n">L</span> <span class="o">=</span> <span class="n">Likelihood</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">likelihoods</span><span class="p">[</span><span class="n">fn</span><span class="p">]</span> <span class="o">=</span> <span class="n">L</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">observables</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_custom_likelihoods_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">L</span> <span class="o">=</span> <span class="n">CustomLikelihood</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">observables</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">custom_likelihoods</span><span class="p">[</span><span class="s1">&#39;custom_&#39;</span> <span class="o">+</span> <span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">L</span>
 
     <span class="k">def</span> <span class="nf">_get_likelihood_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return a path for the likelihood specified by `name`.</span>
@@ -1391,6 +1416,8 @@ table {
             <span class="n">ll</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">flh</span><span class="o">.</span><span class="n">log_likelihood</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">par_dict</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">lh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihoods</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">ll</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">lh</span><span class="o">.</span><span class="n">log_likelihood</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">par_dict</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">clh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">custom_likelihoods</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">ll</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">clh</span><span class="o">.</span><span class="n">log_likelihood</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">par_dict</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ll</span>
 
     <span class="nd">@dispatch</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
@@ -1439,6 +1466,69 @@ table {
                     <span class="n">inspire_dict</span><span class="p">[</span><span class="n">obs</span><span class="p">]</span><span class="o">=</span><span class="p">[</span><span class="n">m_obj</span><span class="o">.</span><span class="n">inspire</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">inspire_dict</span>
 
+    <span class="k">def</span> <span class="nf">number_observations_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exclude_observables</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">nobs_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">flh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fast_likelihoods</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">nobs_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">flh</span><span class="o">.</span><span class="n">observables</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">exclude_observables</span> <span class="ow">or</span> <span class="p">[]))</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">lh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihoods</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">ml</span> <span class="o">=</span>  <span class="n">lh</span><span class="o">.</span><span class="n">measurement_likelihood</span>
+            <span class="n">nobs_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">ml</span><span class="o">.</span><span class="n">get_number_observations</span><span class="p">(</span>
+                <span class="n">exclude_observables</span><span class="o">=</span><span class="n">exclude_observables</span>
+            <span class="p">)</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">clh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">custom_likelihoods</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">nobs_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">clh</span><span class="o">.</span><span class="n">get_number_observations</span><span class="p">()</span>
+        <span class="n">nobs_dict</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">nobs_dict</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="s1">&#39;custom_&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">k</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">nobs_dict</span>
+
+
+<span class="k">class</span> <span class="nc">CustomLikelihood</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">likelihood</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">observables</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span> <span class="o">=</span> <span class="n">likelihood</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">observables</span> <span class="o">=</span> <span class="n">observables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exclude_obs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_exclude_obs_dict</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">get_exclude_obs_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get a dictionary with observables to be excluded from each</span>
+<span class="sd">        (Fast)Likelihood instance.&quot;&quot;&quot;</span>
+        <span class="n">exclude_obs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">flh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">fast_likelihoods</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">exclude_observables</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">flh</span><span class="o">.</span><span class="n">observables</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">observables</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">flh</span><span class="o">.</span><span class="n">observables</span><span class="p">)</span> <span class="o">!=</span> <span class="n">exclude_observables</span><span class="p">:</span>
+                <span class="n">exclude_obs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">exclude_observables</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">lh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">likelihoods</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">exclude_observables</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">lh</span><span class="o">.</span><span class="n">observables</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">observables</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">lh</span><span class="o">.</span><span class="n">observables</span><span class="p">)</span> <span class="o">!=</span> <span class="n">exclude_observables</span><span class="p">:</span>
+                <span class="n">exclude_obs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">exclude_observables</span>
+        <span class="k">return</span> <span class="n">exclude_obs</span>
+
+    <span class="k">def</span> <span class="nf">log_likelihood</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_dict</span><span class="p">,</span> <span class="n">wc_obj</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+         <span class="n">custom_log_likelihood</span> <span class="o">=</span> <span class="mi">0</span>
+         <span class="k">for</span> <span class="n">llh_name</span><span class="p">,</span> <span class="n">exclude_observables</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">exclude_obs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+             <span class="n">llh</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">fast_likelihoods</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">llh_name</span><span class="p">)</span>
+                    <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">likelihoods</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">llh_name</span><span class="p">))</span>
+             <span class="n">custom_log_likelihood</span> <span class="o">+=</span> <span class="n">llh</span><span class="o">.</span><span class="n">log_likelihood</span><span class="p">(</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">par_dict</span><span class="p">,</span> <span class="n">wc_obj</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="n">delta</span><span class="p">,</span>
+                 <span class="n">exclude_observables</span><span class="o">=</span><span class="n">exclude_observables</span>
+             <span class="p">)</span>
+         <span class="k">return</span> <span class="n">custom_log_likelihood</span>
+
+    <span class="k">def</span> <span class="nf">get_number_observations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the number of observations, defined as individual measurements</span>
+<span class="sd">        of observables.&quot;&quot;&quot;</span>
+        <span class="n">nobs</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">llh_name</span><span class="p">,</span> <span class="n">exclude_observables</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">exclude_obs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">llh_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">fast_likelihoods</span><span class="p">:</span>
+                <span class="n">flh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">fast_likelihoods</span><span class="p">[</span><span class="n">llh_name</span><span class="p">]</span>
+                <span class="n">nobs</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">flh</span><span class="o">.</span><span class="n">observables</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">exclude_observables</span> <span class="ow">or</span> <span class="p">[]))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">lh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">likelihoods</span><span class="p">[</span><span class="n">llh_name</span><span class="p">]</span>
+                <span class="n">ml</span> <span class="o">=</span>  <span class="n">lh</span><span class="o">.</span><span class="n">measurement_likelihood</span>
+                <span class="n">nobs</span> <span class="o">+=</span> <span class="n">ml</span><span class="o">.</span><span class="n">get_number_observations</span><span class="p">(</span>
+                    <span class="n">exclude_observables</span><span class="o">=</span><span class="n">exclude_observables</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">nobs</span>
+
+
 <span class="k">class</span> <span class="nc">GlobalLikelihoodPoint</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Class representing the properties of the likelihood function at a</span>
 <span class="sd">    specific point in parameter space.</span>
@@ -1468,7 +1558,7 @@ table {
         <span class="n">ll</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">_log_likelihood</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">w</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">ll</span><span class="p">:</span>
             <span class="n">ll</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">-=</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">log_likelihood_sm</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
-        <span class="n">ll</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">ll</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="n">ll</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">ll</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="s1">&#39;custom_&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">k</span><span class="p">])</span>
         <span class="k">return</span> <span class="n">ll</span>
 
     <span class="k">def</span> <span class="nf">log_likelihood_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1486,6 +1576,17 @@ table {
 <span class="sd">        Cached after the first call. Corresponds to the `global` key of</span>
 <span class="sd">        the dictionary returned by `log_likelihood_dict`.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_likelihood_dict</span><span class="p">()[</span><span class="s1">&#39;global&#39;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">pvalue_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">nobs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">number_observations_dict</span><span class="p">()</span>
+        <span class="n">chi2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chi2_dict</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">pvalue</span><span class="p">(</span><span class="n">chi2</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">nobs</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">chi2</span><span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">chi2_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">ll</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_likelihood_dict</span><span class="p">()</span>
+        <span class="n">llsm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">_log_likelihood_sm</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">llsm</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">llsm</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="s1">&#39;custom_&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">k</span><span class="p">])</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">ll</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">+</span> <span class="n">llsm</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">ll</span><span class="p">}</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">_obstable_tree</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1613,6 +1714,239 @@ table {
     <h2 class="section-title" id="header-classes">Classes</h2>
       
       <div class="item">
+      <p id="smelli.classes.CustomLikelihood" class="name">class <span class="ident">CustomLikelihood</span></p>
+      
+  
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-smelli.classes.CustomLikelihood', this);">Show source &equiv;</a></p>
+  <div id="source-smelli.classes.CustomLikelihood" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">CustomLikelihood</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">likelihood</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">observables</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span> <span class="o">=</span> <span class="n">likelihood</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">observables</span> <span class="o">=</span> <span class="n">observables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exclude_obs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_exclude_obs_dict</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">get_exclude_obs_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get a dictionary with observables to be excluded from each</span>
+<span class="sd">        (Fast)Likelihood instance.&quot;&quot;&quot;</span>
+        <span class="n">exclude_obs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">flh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">fast_likelihoods</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">exclude_observables</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">flh</span><span class="o">.</span><span class="n">observables</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">observables</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">flh</span><span class="o">.</span><span class="n">observables</span><span class="p">)</span> <span class="o">!=</span> <span class="n">exclude_observables</span><span class="p">:</span>
+                <span class="n">exclude_obs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">exclude_observables</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">lh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">likelihoods</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">exclude_observables</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">lh</span><span class="o">.</span><span class="n">observables</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">observables</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">lh</span><span class="o">.</span><span class="n">observables</span><span class="p">)</span> <span class="o">!=</span> <span class="n">exclude_observables</span><span class="p">:</span>
+                <span class="n">exclude_obs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">exclude_observables</span>
+        <span class="k">return</span> <span class="n">exclude_obs</span>
+
+    <span class="k">def</span> <span class="nf">log_likelihood</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_dict</span><span class="p">,</span> <span class="n">wc_obj</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+         <span class="n">custom_log_likelihood</span> <span class="o">=</span> <span class="mi">0</span>
+         <span class="k">for</span> <span class="n">llh_name</span><span class="p">,</span> <span class="n">exclude_observables</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">exclude_obs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+             <span class="n">llh</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">fast_likelihoods</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">llh_name</span><span class="p">)</span>
+                    <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">likelihoods</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">llh_name</span><span class="p">))</span>
+             <span class="n">custom_log_likelihood</span> <span class="o">+=</span> <span class="n">llh</span><span class="o">.</span><span class="n">log_likelihood</span><span class="p">(</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">par_dict</span><span class="p">,</span> <span class="n">wc_obj</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="n">delta</span><span class="p">,</span>
+                 <span class="n">exclude_observables</span><span class="o">=</span><span class="n">exclude_observables</span>
+             <span class="p">)</span>
+         <span class="k">return</span> <span class="n">custom_log_likelihood</span>
+
+    <span class="k">def</span> <span class="nf">get_number_observations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the number of observations, defined as individual measurements</span>
+<span class="sd">        of observables.&quot;&quot;&quot;</span>
+        <span class="n">nobs</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">llh_name</span><span class="p">,</span> <span class="n">exclude_observables</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">exclude_obs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">llh_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">fast_likelihoods</span><span class="p">:</span>
+                <span class="n">flh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">fast_likelihoods</span><span class="p">[</span><span class="n">llh_name</span><span class="p">]</span>
+                <span class="n">nobs</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">flh</span><span class="o">.</span><span class="n">observables</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">exclude_observables</span> <span class="ow">or</span> <span class="p">[]))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">lh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">likelihoods</span><span class="p">[</span><span class="n">llh_name</span><span class="p">]</span>
+                <span class="n">ml</span> <span class="o">=</span>  <span class="n">lh</span><span class="o">.</span><span class="n">measurement_likelihood</span>
+                <span class="n">nobs</span> <span class="o">+=</span> <span class="n">ml</span><span class="o">.</span><span class="n">get_number_observations</span><span class="p">(</span>
+                    <span class="n">exclude_observables</span><span class="o">=</span><span class="n">exclude_observables</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">nobs</span>
+</pre></div>
+
+  </div>
+</div>
+
+
+      <div class="class">
+          <h3>Ancestors (in MRO)</h3>
+          <ul class="class_list">
+          <li><a href="#smelli.classes.CustomLikelihood">CustomLikelihood</a></li>
+          <li>builtins.object</li>
+          </ul>
+          <h3>Static methods</h3>
+            
+  <div class="item">
+    <div class="name def" id="smelli.classes.CustomLikelihood.__init__">
+    <p>def <span class="ident">__init__</span>(</p><p>self, likelihood, name, observables)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Initialize self.  See help(type(self)) for accurate signature.</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-smelli.classes.CustomLikelihood.__init__', this);">Show source &equiv;</a></p>
+  <div id="source-smelli.classes.CustomLikelihood.__init__" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">likelihood</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">observables</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span> <span class="o">=</span> <span class="n">likelihood</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">observables</span> <span class="o">=</span> <span class="n">observables</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">exclude_obs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_exclude_obs_dict</span><span class="p">()</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="smelli.classes.CustomLikelihood.get_exclude_obs_dict">
+    <p>def <span class="ident">get_exclude_obs_dict</span>(</p><p>self)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Get a dictionary with observables to be excluded from each
+(Fast)Likelihood instance.</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-smelli.classes.CustomLikelihood.get_exclude_obs_dict', this);">Show source &equiv;</a></p>
+  <div id="source-smelli.classes.CustomLikelihood.get_exclude_obs_dict" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">get_exclude_obs_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get a dictionary with observables to be excluded from each</span>
+<span class="sd">    (Fast)Likelihood instance.&quot;&quot;&quot;</span>
+    <span class="n">exclude_obs</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">flh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">fast_likelihoods</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">exclude_observables</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">flh</span><span class="o">.</span><span class="n">observables</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">observables</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">flh</span><span class="o">.</span><span class="n">observables</span><span class="p">)</span> <span class="o">!=</span> <span class="n">exclude_observables</span><span class="p">:</span>
+            <span class="n">exclude_obs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">exclude_observables</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">lh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">likelihoods</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">exclude_observables</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">lh</span><span class="o">.</span><span class="n">observables</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">observables</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">lh</span><span class="o">.</span><span class="n">observables</span><span class="p">)</span> <span class="o">!=</span> <span class="n">exclude_observables</span><span class="p">:</span>
+            <span class="n">exclude_obs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">exclude_observables</span>
+    <span class="k">return</span> <span class="n">exclude_obs</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="smelli.classes.CustomLikelihood.get_number_observations">
+    <p>def <span class="ident">get_number_observations</span>(</p><p>self)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Get the number of observations, defined as individual measurements
+of observables.</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-smelli.classes.CustomLikelihood.get_number_observations', this);">Show source &equiv;</a></p>
+  <div id="source-smelli.classes.CustomLikelihood.get_number_observations" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">get_number_observations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get the number of observations, defined as individual measurements</span>
+<span class="sd">    of observables.&quot;&quot;&quot;</span>
+    <span class="n">nobs</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">llh_name</span><span class="p">,</span> <span class="n">exclude_observables</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">exclude_obs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">llh_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">fast_likelihoods</span><span class="p">:</span>
+            <span class="n">flh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">fast_likelihoods</span><span class="p">[</span><span class="n">llh_name</span><span class="p">]</span>
+            <span class="n">nobs</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">flh</span><span class="o">.</span><span class="n">observables</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">exclude_observables</span> <span class="ow">or</span> <span class="p">[]))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">lh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">likelihoods</span><span class="p">[</span><span class="n">llh_name</span><span class="p">]</span>
+            <span class="n">ml</span> <span class="o">=</span>  <span class="n">lh</span><span class="o">.</span><span class="n">measurement_likelihood</span>
+            <span class="n">nobs</span> <span class="o">+=</span> <span class="n">ml</span><span class="o">.</span><span class="n">get_number_observations</span><span class="p">(</span>
+                <span class="n">exclude_observables</span><span class="o">=</span><span class="n">exclude_observables</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">nobs</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="smelli.classes.CustomLikelihood.log_likelihood">
+    <p>def <span class="ident">log_likelihood</span>(</p><p>self, par_dict, wc_obj, delta=False)</p>
+    </div>
+    
+
+    
+  
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-smelli.classes.CustomLikelihood.log_likelihood', this);">Show source &equiv;</a></p>
+  <div id="source-smelli.classes.CustomLikelihood.log_likelihood" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">log_likelihood</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_dict</span><span class="p">,</span> <span class="n">wc_obj</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+     <span class="n">custom_log_likelihood</span> <span class="o">=</span> <span class="mi">0</span>
+     <span class="k">for</span> <span class="n">llh_name</span><span class="p">,</span> <span class="n">exclude_observables</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">exclude_obs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+         <span class="n">llh</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">fast_likelihoods</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">llh_name</span><span class="p">)</span>
+                <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">likelihoods</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">llh_name</span><span class="p">))</span>
+         <span class="n">custom_log_likelihood</span> <span class="o">+=</span> <span class="n">llh</span><span class="o">.</span><span class="n">log_likelihood</span><span class="p">(</span>
+             <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">par_dict</span><span class="p">,</span> <span class="n">wc_obj</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="n">delta</span><span class="p">,</span>
+             <span class="n">exclude_observables</span><span class="o">=</span><span class="n">exclude_observables</span>
+         <span class="p">)</span>
+     <span class="k">return</span> <span class="n">custom_log_likelihood</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+          <h3>Instance variables</h3>
+            <div class="item">
+            <p id="smelli.classes.CustomLikelihood.exclude_obs" class="name">var <span class="ident">exclude_obs</span></p>
+            
+
+            
+  
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="smelli.classes.CustomLikelihood.likelihood" class="name">var <span class="ident">likelihood</span></p>
+            
+
+            
+  
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="smelli.classes.CustomLikelihood.name" class="name">var <span class="ident">name</span></p>
+            
+
+            
+  
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="smelli.classes.CustomLikelihood.observables" class="name">var <span class="ident">observables</span></p>
+            
+
+            
+  
+  <div class="source_cont">
+</div>
+
+            </div>
+      </div>
+      </div>
+      
+      <div class="item">
       <p id="smelli.classes.GlobalLikelihood" class="name">class <span class="ident">GlobalLikelihood</span></p>
       
   
@@ -1689,7 +2023,8 @@ experimental central values and covariances or load them from data files</li>
                  <span class="n">exclude_likelihoods</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                  <span class="n">Nexp</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span>
                  <span class="n">exp_cov_folder</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                 <span class="n">sm_cov_folder</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+                 <span class="n">sm_cov_folder</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                 <span class="n">custom_likelihoods</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Initialize the likelihood.</span>
 
 <span class="sd">        Optionally, a dictionary of parameters can be passed as `par_dict`.</span>
@@ -1716,6 +2051,10 @@ experimental central values and covariances or load them from data files</li>
 <span class="sd">        - sm_cov_folder: directory containing saved SM</span>
 <span class="sd">          covariances. The data files have to be in the format exported by</span>
 <span class="sd">          `save_sm_covariances`.</span>
+<span class="sd">        - custom_likelihoods: a dictionary in which each value is a list of</span>
+<span class="sd">          observables and each key is a string that serves as user-defined</span>
+<span class="sd">          name. For each item of the dictionary, a custom likelihood will be</span>
+<span class="sd">          computed.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">eft</span> <span class="o">=</span> <span class="n">eft</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">basis</span> <span class="o">=</span> <span class="n">basis</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_bases</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">eft</span><span class="p">]</span>
@@ -1725,6 +2064,8 @@ experimental central values and covariances or load them from data files</li>
         <span class="bp">self</span><span class="o">.</span><span class="n">par_dict</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">par_dict</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">likelihoods</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fast_likelihoods</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_custom_likelihoods_dict</span> <span class="o">=</span> <span class="n">custom_likelihoods</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">custom_likelihoods</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_load_likelihoods</span><span class="p">(</span><span class="n">include_likelihoods</span><span class="o">=</span><span class="n">include_likelihoods</span><span class="p">,</span>
                                <span class="n">exclude_likelihoods</span><span class="o">=</span><span class="n">exclude_likelihoods</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_Nexp</span> <span class="o">=</span> <span class="n">Nexp</span>
@@ -1771,6 +2112,9 @@ experimental central values and covariances or load them from data files</li>
             <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_likelihood_path</span><span class="p">(</span><span class="n">fn</span><span class="p">),</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
                 <span class="n">L</span> <span class="o">=</span> <span class="n">Likelihood</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">likelihoods</span><span class="p">[</span><span class="n">fn</span><span class="p">]</span> <span class="o">=</span> <span class="n">L</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">observables</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_custom_likelihoods_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">L</span> <span class="o">=</span> <span class="n">CustomLikelihood</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">observables</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">custom_likelihoods</span><span class="p">[</span><span class="s1">&#39;custom_&#39;</span> <span class="o">+</span> <span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">L</span>
 
     <span class="k">def</span> <span class="nf">_get_likelihood_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return a path for the likelihood specified by `name`.</span>
@@ -1910,6 +2254,8 @@ experimental central values and covariances or load them from data files</li>
             <span class="n">ll</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">flh</span><span class="o">.</span><span class="n">log_likelihood</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">par_dict</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">lh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihoods</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">ll</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">lh</span><span class="o">.</span><span class="n">log_likelihood</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">par_dict</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">clh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">custom_likelihoods</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">ll</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">clh</span><span class="o">.</span><span class="n">log_likelihood</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">par_dict</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ll</span>
 
     <span class="nd">@dispatch</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
@@ -1957,6 +2303,20 @@ experimental central values and covariances or load them from data files</li>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">inspire_dict</span><span class="p">[</span><span class="n">obs</span><span class="p">]</span><span class="o">=</span><span class="p">[</span><span class="n">m_obj</span><span class="o">.</span><span class="n">inspire</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">inspire_dict</span>
+
+    <span class="k">def</span> <span class="nf">number_observations_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exclude_observables</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">nobs_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">flh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fast_likelihoods</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">nobs_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">flh</span><span class="o">.</span><span class="n">observables</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">exclude_observables</span> <span class="ow">or</span> <span class="p">[]))</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">lh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihoods</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">ml</span> <span class="o">=</span>  <span class="n">lh</span><span class="o">.</span><span class="n">measurement_likelihood</span>
+            <span class="n">nobs_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">ml</span><span class="o">.</span><span class="n">get_number_observations</span><span class="p">(</span>
+                <span class="n">exclude_observables</span><span class="o">=</span><span class="n">exclude_observables</span>
+            <span class="p">)</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">clh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">custom_likelihoods</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">nobs_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">clh</span><span class="o">.</span><span class="n">get_number_observations</span><span class="p">()</span>
+        <span class="n">nobs_dict</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">nobs_dict</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="s1">&#39;custom_&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">k</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">nobs_dict</span>
 </pre></div>
 
   </div>
@@ -1973,7 +2333,7 @@ experimental central values and covariances or load them from data files</li>
             
   <div class="item">
     <div class="name def" id="smelli.classes.GlobalLikelihood.__init__">
-    <p>def <span class="ident">__init__</span>(</p><p>self, eft=&#39;SMEFT&#39;, basis=None, par_dict=None, include_likelihoods=None, exclude_likelihoods=None, Nexp=5000, exp_cov_folder=None, sm_cov_folder=None)</p>
+    <p>def <span class="ident">__init__</span>(</p><p>self, eft=&#39;SMEFT&#39;, basis=None, par_dict=None, include_likelihoods=None, exclude_likelihoods=None, Nexp=5000, exp_cov_folder=None, sm_cov_folder=None, custom_likelihoods=None)</p>
     </div>
     
 
@@ -2002,6 +2362,10 @@ be used.</p>
 <li>sm_cov_folder: directory containing saved SM
   covariances. The data files have to be in the format exported by
   <code>save_sm_covariances</code>.</li>
+<li>custom_likelihoods: a dictionary in which each value is a list of
+  observables and each key is a string that serves as user-defined
+  name. For each item of the dictionary, a custom likelihood will be
+  computed.</li>
 </ul></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-smelli.classes.GlobalLikelihood.__init__', this);">Show source &equiv;</a></p>
@@ -2011,7 +2375,8 @@ be used.</p>
              <span class="n">exclude_likelihoods</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
              <span class="n">Nexp</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span>
              <span class="n">exp_cov_folder</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-             <span class="n">sm_cov_folder</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+             <span class="n">sm_cov_folder</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+             <span class="n">custom_likelihoods</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Initialize the likelihood.</span>
 <span class="sd">    Optionally, a dictionary of parameters can be passed as `par_dict`.</span>
 <span class="sd">    If not given (or not complete), flavio default parameter values will</span>
@@ -2034,6 +2399,10 @@ be used.</p>
 <span class="sd">    - sm_cov_folder: directory containing saved SM</span>
 <span class="sd">      covariances. The data files have to be in the format exported by</span>
 <span class="sd">      `save_sm_covariances`.</span>
+<span class="sd">    - custom_likelihoods: a dictionary in which each value is a list of</span>
+<span class="sd">      observables and each key is a string that serves as user-defined</span>
+<span class="sd">      name. For each item of the dictionary, a custom likelihood will be</span>
+<span class="sd">      computed.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">eft</span> <span class="o">=</span> <span class="n">eft</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">basis</span> <span class="o">=</span> <span class="n">basis</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_bases</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">eft</span><span class="p">]</span>
@@ -2043,6 +2412,8 @@ be used.</p>
     <span class="bp">self</span><span class="o">.</span><span class="n">par_dict</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">par_dict</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">likelihoods</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">fast_likelihoods</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_custom_likelihoods_dict</span> <span class="o">=</span> <span class="n">custom_likelihoods</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">custom_likelihoods</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_load_likelihoods</span><span class="p">(</span><span class="n">include_likelihoods</span><span class="o">=</span><span class="n">include_likelihoods</span><span class="p">,</span>
                            <span class="n">exclude_likelihoods</span><span class="o">=</span><span class="n">exclude_likelihoods</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_Nexp</span> <span class="o">=</span> <span class="n">Nexp</span>
@@ -2196,6 +2567,38 @@ from nuisance parameters.</p>
   
             
   <div class="item">
+    <div class="name def" id="smelli.classes.GlobalLikelihood.number_observations_dict">
+    <p>def <span class="ident">number_observations_dict</span>(</p><p>self, exclude_observables=None)</p>
+    </div>
+    
+
+    
+  
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-smelli.classes.GlobalLikelihood.number_observations_dict', this);">Show source &equiv;</a></p>
+  <div id="source-smelli.classes.GlobalLikelihood.number_observations_dict" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">number_observations_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exclude_observables</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="n">nobs_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">flh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fast_likelihoods</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">nobs_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">flh</span><span class="o">.</span><span class="n">observables</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">exclude_observables</span> <span class="ow">or</span> <span class="p">[]))</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">lh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihoods</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">ml</span> <span class="o">=</span>  <span class="n">lh</span><span class="o">.</span><span class="n">measurement_likelihood</span>
+        <span class="n">nobs_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">ml</span><span class="o">.</span><span class="n">get_number_observations</span><span class="p">(</span>
+            <span class="n">exclude_observables</span><span class="o">=</span><span class="n">exclude_observables</span>
+        <span class="p">)</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">clh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">custom_likelihoods</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">nobs_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">clh</span><span class="o">.</span><span class="n">get_number_observations</span><span class="p">()</span>
+    <span class="n">nobs_dict</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">nobs_dict</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="s1">&#39;custom_&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">k</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">nobs_dict</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
     <div class="name def" id="smelli.classes.GlobalLikelihood.save_exp_covariances">
     <p>def <span class="ident">save_exp_covariances</span>(</p><p>self, folder)</p>
     </div>
@@ -2243,6 +2646,16 @@ from nuisance parameters.</p>
           <h3>Instance variables</h3>
             <div class="item">
             <p id="smelli.classes.GlobalLikelihood.basis" class="name">var <span class="ident">basis</span></p>
+            
+
+            
+  
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="smelli.classes.GlobalLikelihood.custom_likelihoods" class="name">var <span class="ident">custom_likelihoods</span></p>
             
 
             
@@ -2364,7 +2777,7 @@ for each individual observable, given the Wilson coefficients</li>
         <span class="n">ll</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">_log_likelihood</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">w</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">ll</span><span class="p">:</span>
             <span class="n">ll</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">-=</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">log_likelihood_sm</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
-        <span class="n">ll</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">ll</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="n">ll</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">ll</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="s1">&#39;custom_&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">k</span><span class="p">])</span>
         <span class="k">return</span> <span class="n">ll</span>
 
     <span class="k">def</span> <span class="nf">log_likelihood_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -2382,6 +2795,17 @@ for each individual observable, given the Wilson coefficients</li>
 <span class="sd">        Cached after the first call. Corresponds to the `global` key of</span>
 <span class="sd">        the dictionary returned by `log_likelihood_dict`.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_likelihood_dict</span><span class="p">()[</span><span class="s1">&#39;global&#39;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">pvalue_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">nobs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">number_observations_dict</span><span class="p">()</span>
+        <span class="n">chi2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chi2_dict</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">pvalue</span><span class="p">(</span><span class="n">chi2</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">nobs</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">chi2</span><span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">chi2_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">ll</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_likelihood_dict</span><span class="p">()</span>
+        <span class="n">llsm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">_log_likelihood_sm</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">llsm</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">llsm</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="s1">&#39;custom_&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">k</span><span class="p">])</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">ll</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">+</span> <span class="n">llsm</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">ll</span><span class="p">}</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">_obstable_tree</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -2538,6 +2962,30 @@ for each individual observable, given the Wilson coefficients</li>
   
             
   <div class="item">
+    <div class="name def" id="smelli.classes.GlobalLikelihoodPoint.chi2_dict">
+    <p>def <span class="ident">chi2_dict</span>(</p><p>self)</p>
+    </div>
+    
+
+    
+  
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-smelli.classes.GlobalLikelihoodPoint.chi2_dict', this);">Show source &equiv;</a></p>
+  <div id="source-smelli.classes.GlobalLikelihoodPoint.chi2_dict" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">chi2_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="n">ll</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_likelihood_dict</span><span class="p">()</span>
+    <span class="n">llsm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">_log_likelihood_sm</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">llsm</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">llsm</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="s1">&#39;custom_&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">k</span><span class="p">])</span>
+    <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">ll</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">+</span> <span class="n">llsm</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">ll</span><span class="p">}</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
     <div class="name def" id="smelli.classes.GlobalLikelihoodPoint.log_likelihood_dict">
     <p>def <span class="ident">log_likelihood_dict</span>(</p><p>self)</p>
     </div>
@@ -2658,6 +3106,29 @@ due to correlations.</p></div>
         <span class="k">del</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;ll_central&#39;</span><span class="p">])</span>
         <span class="k">del</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;ll_sm&#39;</span><span class="p">])</span>
     <span class="k">return</span> <span class="n">df</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="smelli.classes.GlobalLikelihoodPoint.pvalue_dict">
+    <p>def <span class="ident">pvalue_dict</span>(</p><p>self)</p>
+    </div>
+    
+
+    
+  
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-smelli.classes.GlobalLikelihoodPoint.pvalue_dict', this);">Show source &equiv;</a></p>
+  <div id="source-smelli.classes.GlobalLikelihoodPoint.pvalue_dict" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">pvalue_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="n">nobs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">number_observations_dict</span><span class="p">()</span>
+    <span class="n">chi2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chi2_dict</span><span class="p">()</span>
+    <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">pvalue</span><span class="p">(</span><span class="n">chi2</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">nobs</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">chi2</span><span class="p">}</span>
 </pre></div>
 
   </div>

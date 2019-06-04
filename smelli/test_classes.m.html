@@ -1201,6 +1201,7 @@ table {
     <li class="mono"><a href="#smelli.test_classes.TestGlobalLikelihoodPoint.subTest">subTest</a></li>
     <li class="mono"><a href="#smelli.test_classes.TestGlobalLikelihoodPoint.tearDown">tearDown</a></li>
     <li class="mono"><a href="#smelli.test_classes.TestGlobalLikelihoodPoint.test_obstable">test_obstable</a></li>
+    <li class="mono"><a href="#smelli.test_classes.TestGlobalLikelihoodPoint.test_pvalue">test_pvalue</a></li>
     <li class="mono"><a href="#smelli.test_classes.TestGlobalLikelihoodPoint.setUpClass">setUpClass</a></li>
     <li class="mono"><a href="#smelli.test_classes.TestGlobalLikelihoodPoint.tearDownClass">tearDownClass</a></li>
   </ul>
@@ -1290,6 +1291,12 @@ table {
         <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">GlobalLikelihoodPoint</span><span class="p">)</span>
         <span class="n">df</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">obstable</span><span class="p">(</span><span class="n">min_pull_exp</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;pull exp.&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">test_pvalue</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">gl</span> <span class="o">=</span> <span class="n">GlobalLikelihood</span><span class="p">()</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">gl</span><span class="o">.</span><span class="n">parameter_point</span><span class="p">({},</span> <span class="mf">91.1876</span><span class="p">)</span>
+        <span class="n">pval</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">pvalue_dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="mi">0</span> <span class="o">&lt;</span> <span class="n">pval</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">)</span>
 </pre></div>
 
   </div>
@@ -3527,7 +3534,7 @@ block, allowing further test code to be executed.</p></div>
 <span class="sd">    case as failed but resumes execution at the end of the enclosed</span>
 <span class="sd">    block, allowing further test code to be executed.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_outcome</span><span class="o">.</span><span class="n">result_supports_subtests</span><span class="p">:</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_outcome</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_outcome</span><span class="o">.</span><span class="n">result_supports_subtests</span><span class="p">:</span>
         <span class="k">yield</span>
         <span class="k">return</span>
     <span class="n">parent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subtest</span>
@@ -3809,6 +3816,12 @@ in order to be run.</p>
         <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">GlobalLikelihoodPoint</span><span class="p">)</span>
         <span class="n">df</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">obstable</span><span class="p">(</span><span class="n">min_pull_exp</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;pull exp.&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">test_pvalue</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">gl</span> <span class="o">=</span> <span class="n">GlobalLikelihood</span><span class="p">()</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">gl</span><span class="o">.</span><span class="n">parameter_point</span><span class="p">({},</span> <span class="mf">91.1876</span><span class="p">)</span>
+        <span class="n">pval</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">pvalue_dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="mi">0</span> <span class="o">&lt;</span> <span class="n">pval</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">)</span>
 </pre></div>
 
   </div>
@@ -5952,7 +5965,7 @@ block, allowing further test code to be executed.</p></div>
 <span class="sd">    case as failed but resumes execution at the end of the enclosed</span>
 <span class="sd">    block, allowing further test code to be executed.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_outcome</span><span class="o">.</span><span class="n">result_supports_subtests</span><span class="p">:</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_outcome</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_outcome</span><span class="o">.</span><span class="n">result_supports_subtests</span><span class="p">:</span>
         <span class="k">yield</span>
         <span class="k">return</span>
     <span class="n">parent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subtest</span>
@@ -6022,6 +6035,30 @@ block, allowing further test code to be executed.</p></div>
     <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">GlobalLikelihoodPoint</span><span class="p">)</span>
     <span class="n">df</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">obstable</span><span class="p">(</span><span class="n">min_pull_exp</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;pull exp.&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">)</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="smelli.test_classes.TestGlobalLikelihoodPoint.test_pvalue">
+    <p>def <span class="ident">test_pvalue</span>(</p><p>self)</p>
+    </div>
+    
+
+    
+  
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-smelli.test_classes.TestGlobalLikelihoodPoint.test_pvalue', this);">Show source &equiv;</a></p>
+  <div id="source-smelli.test_classes.TestGlobalLikelihoodPoint.test_pvalue" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">test_pvalue</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="n">gl</span> <span class="o">=</span> <span class="n">GlobalLikelihood</span><span class="p">()</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">gl</span><span class="o">.</span><span class="n">parameter_point</span><span class="p">({},</span> <span class="mf">91.1876</span><span class="p">)</span>
+    <span class="n">pval</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">pvalue_dict</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="mi">0</span> <span class="o">&lt;</span> <span class="n">pval</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">)</span>
 </pre></div>
 
   </div>
