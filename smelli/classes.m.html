@@ -860,8 +860,13 @@ table {
   </style>
 
   <style type="text/css">
-  .codehilite .hll { background-color: #ffffcc }
-.codehilite  { background: #f8f8f8; }
+  pre { line-height: 125%; margin: 0; }
+td.linenos pre { color: #000000; background-color: #f0f0f0; padding: 0 5px 0 5px; }
+span.linenos { color: #000000; background-color: #f0f0f0; padding: 0 5px 0 5px; }
+td.linenos pre.special { color: #000000; background-color: #ffffc0; padding: 0 5px 0 5px; }
+span.linenos.special { color: #000000; background-color: #ffffc0; padding: 0 5px 0 5px; }
+.codehilite .hll { background-color: #ffffcc }
+.codehilite { background: #f8f8f8; }
 .codehilite .c { color: #408080; font-style: italic } /* Comment */
 .codehilite .err { border: 1px solid #FF0000 } /* Error */
 .codehilite .k { color: #008000; font-weight: bold } /* Keyword */
@@ -1077,6 +1082,7 @@ table {
     <li class="mono"><a href="#smelli.classes.GlobalLikelihood.load_sm_covariances">load_sm_covariances</a></li>
     <li class="mono"><a href="#smelli.classes.GlobalLikelihood.make_measurement">make_measurement</a></li>
     <li class="mono"><a href="#smelli.classes.GlobalLikelihood.number_observations_dict">number_observations_dict</a></li>
+    <li class="mono"><a href="#smelli.classes.GlobalLikelihood.plot_data_2d">plot_data_2d</a></li>
     <li class="mono"><a href="#smelli.classes.GlobalLikelihood.save_exp_covariances">save_exp_covariances</a></li>
     <li class="mono"><a href="#smelli.classes.GlobalLikelihood.save_sm_covariances">save_sm_covariances</a></li>
   </ul>
@@ -1122,8 +1128,8 @@ table {
 <span class="kn">from</span> <span class="nn">flavio.statistics.probability</span> <span class="kn">import</span> <span class="n">NormalDistribution</span>
 <span class="kn">from</span> <span class="nn">flavio.statistics.functions</span> <span class="kn">import</span> <span class="n">pull</span><span class="p">,</span> <span class="n">pvalue</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
 <span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">ceil</span>
 <span class="kn">from</span> <span class="nn">.util</span> <span class="kn">import</span> <span class="n">tree</span><span class="p">,</span> <span class="n">get_datapath</span>
@@ -1131,6 +1137,9 @@ table {
 <span class="kn">from</span> <span class="nn">multipledispatch</span> <span class="kn">import</span> <span class="n">dispatch</span>
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
 <span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
+<span class="kn">from</span> <span class="nn">operator</span> <span class="kn">import</span> <span class="n">itemgetter</span>
+<span class="kn">from</span> <span class="nn">numbers</span> <span class="kn">import</span> <span class="n">Number</span>
 
 
 <span class="c1"># by default, smelli uses leading log accuracy for SMEFT running!</span>
@@ -1164,6 +1173,11 @@ table {
 
     <span class="n">_default_bases</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;SMEFT&#39;</span><span class="p">:</span> <span class="s1">&#39;Warsaw&#39;</span><span class="p">,</span> <span class="s1">&#39;WET&#39;</span><span class="p">:</span> <span class="s1">&#39;flavio&#39;</span><span class="p">}</span>
 
+    <span class="n">_fast_likelihoods_yaml_fixckm</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s1">&#39;fast_likelihood_quarks_fixckm.yaml&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;fast_likelihood_leptons.yaml&#39;</span>
+    <span class="p">]</span>
+
     <span class="n">_fast_likelihoods_yaml</span> <span class="o">=</span> <span class="p">[</span>
         <span class="s1">&#39;fast_likelihood_quarks.yaml&#39;</span><span class="p">,</span>
         <span class="s1">&#39;fast_likelihood_leptons.yaml&#39;</span>
@@ -1171,6 +1185,7 @@ table {
 
     <span class="n">_likelihoods_yaml</span> <span class="o">=</span> <span class="p">[</span>
         <span class="s1">&#39;likelihood_ewpt.yaml&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;likelihood_eeww.yaml&#39;</span><span class="p">,</span>
         <span class="s1">&#39;likelihood_lept.yaml&#39;</span><span class="p">,</span>
         <span class="s1">&#39;likelihood_rd_rds.yaml&#39;</span><span class="p">,</span>
         <span class="s1">&#39;likelihood_lfu_fccc.yaml&#39;</span><span class="p">,</span>
@@ -1179,17 +1194,18 @@ table {
         <span class="s1">&#39;likelihood_bqnunu.yaml&#39;</span><span class="p">,</span>
         <span class="s1">&#39;likelihood_lfv.yaml&#39;</span><span class="p">,</span>
         <span class="s1">&#39;likelihood_zlfv.yaml&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;likelihood_higgs.yaml&#39;</span><span class="p">,</span>
     <span class="p">]</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eft</span><span class="o">=</span><span class="s1">&#39;SMEFT&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                 <span class="n">par_dict</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                 <span class="n">include_likelihoods</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                 <span class="n">exclude_likelihoods</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eft</span><span class="o">=</span><span class="s1">&#39;SMEFT&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">par_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">include_likelihoods</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">exclude_likelihoods</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">Nexp</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span>
-                 <span class="n">exp_cov_folder</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                 <span class="n">sm_cov_folder</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                 <span class="n">custom_likelihoods</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                 <span class="n">fix_ckm</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                 <span class="n">exp_cov_folder</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">sm_cov_folder</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">custom_likelihoods</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">fix_ckm</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">ckm_scheme</span><span class="o">=</span><span class="s1">&#39;CKMSchemeRmuBtaunuBxlnuDeltaM&#39;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Initialize the likelihood.</span>
 
@@ -1240,13 +1256,15 @@ table {
         <span class="c1"># take missing parameters from flavio defaults</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">par_dict_default</span> <span class="o">=</span> <span class="n">flavio</span><span class="o">.</span><span class="n">default_parameters</span><span class="o">.</span><span class="n">get_central_all</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">par_dict_default</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">par_dict</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_par_dict_sm</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_par_dict_sm</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fix_ckm</span> <span class="o">=</span> <span class="n">fix_ckm</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fix_ckm</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_fast_likelihoods_yaml</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fast_likelihoods_yaml_fixckm</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_ckm_scheme</span> <span class="o">=</span> <span class="n">get_ckm_schemes</span><span class="p">()[</span><span class="n">ckm_scheme</span><span class="p">]</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_ckm_scheme_name</span> <span class="o">=</span> <span class="n">ckm_scheme</span>
         <span class="k">except</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;CKM scheme &#39;{}&#39; is not defined.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ckm_scheme</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;CKM scheme &#39;</span><span class="si">{}</span><span class="s2">&#39; is not defined.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ckm_scheme</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">likelihoods</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fast_likelihoods</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_custom_likelihoods_dict</span> <span class="o">=</span> <span class="n">custom_likelihoods</span> <span class="ow">or</span> <span class="p">{}</span>
@@ -1254,38 +1272,43 @@ table {
         <span class="bp">self</span><span class="o">.</span><span class="n">_load_likelihoods</span><span class="p">(</span><span class="n">include_likelihoods</span><span class="o">=</span><span class="n">include_likelihoods</span><span class="p">,</span>
                                <span class="n">exclude_likelihoods</span><span class="o">=</span><span class="n">exclude_likelihoods</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_Nexp</span> <span class="o">=</span> <span class="n">Nexp</span>
-        <span class="k">if</span> <span class="n">exp_cov_folder</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">exp_cov_folder</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">load_exp_covariances</span><span class="p">(</span><span class="n">exp_cov_folder</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_sm_cov_loaded</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sm_cov_loaded</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">sm_cov_folder</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">sm_cov_folder</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">load_sm_covariances</span><span class="p">(</span><span class="n">get_datapath</span><span class="p">(</span><span class="s1">&#39;smelli&#39;</span><span class="p">,</span> <span class="s1">&#39;data/cache&#39;</span><span class="p">))</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">load_sm_covariances</span><span class="p">(</span><span class="n">sm_cov_folder</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_sm_cov_loaded</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_sm_cov_loaded</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">make_measurement</span><span class="p">()</span>
         <span class="k">except</span> <span class="p">(</span><span class="ne">KeyboardInterrupt</span><span class="p">,</span> <span class="ne">SystemExit</span><span class="p">):</span>
             <span class="k">raise</span>
         <span class="k">except</span><span class="p">:</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;There was a problem loading the SM covariances. &quot;</span>
                           <span class="s2">&quot;Please recompute them with `make_measurement`.&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_log_likelihood_sm</span> <span class="o">=</span> <span class="bp">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_obstable_sm</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_log_likelihood_sm</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_obstable_sm</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">def</span> <span class="nf">_load_likelihoods</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                          <span class="n">include_likelihoods</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                          <span class="n">exclude_likelihoods</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">include_likelihoods</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">exclude_likelihoods</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                          <span class="n">include_likelihoods</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                          <span class="n">exclude_likelihoods</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">include_likelihoods</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">exclude_likelihoods</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;include_likelihoods and exclude_likelihoods &quot;</span>
                              <span class="s2">&quot;should not be specified simultaneously.&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">argument_name</span><span class="p">,</span> <span class="n">argument</span> <span class="ow">in</span> <span class="p">[(</span><span class="s1">&#39;exclude_likelihoods&#39;</span><span class="p">,</span> <span class="n">exclude_likelihoods</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;include_likelihoods&#39;</span><span class="p">,</span><span class="n">include_likelihoods</span><span class="p">)]:</span>
+            <span class="k">if</span> <span class="n">argument</span><span class="p">:</span>
+                <span class="n">unknown_likelihoods</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">argument</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fast_likelihoods_yaml</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_likelihoods_yaml</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">unknown_likelihoods</span><span class="p">:</span>  
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> contains unknown likelihoods: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">argument_name</span><span class="p">,</span><span class="n">unknown_likelihoods</span><span class="p">))</span>
         <span class="c1"># load ckm parameters for given CKM scheme</span>
-        <span class="n">par_ckm_file</span> <span class="o">=</span> <span class="s1">&#39;par_ckm_{}.yaml&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ckm_scheme_name</span><span class="p">)</span>
+        <span class="n">par_ckm_file</span> <span class="o">=</span> <span class="s1">&#39;par_ckm_</span><span class="si">{}</span><span class="s1">.yaml&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ckm_scheme_name</span><span class="p">)</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_yaml_path</span><span class="p">(</span><span class="n">par_ckm_file</span><span class="p">),</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="n">par_ckm_dict</span> <span class="o">=</span> <span class="n">flavio</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">yaml</span><span class="o">.</span><span class="n">load_include</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">fn</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fast_likelihoods_yaml</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">include_likelihoods</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">fn</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">include_likelihoods</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">include_likelihoods</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">fn</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">include_likelihoods</span><span class="p">:</span>
                 <span class="k">continue</span>
-            <span class="k">if</span> <span class="n">exclude_likelihoods</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">fn</span> <span class="ow">in</span> <span class="n">exclude_likelihoods</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">exclude_likelihoods</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">fn</span> <span class="ow">in</span> <span class="n">exclude_likelihoods</span><span class="p">:</span>
                 <span class="k">continue</span>
             <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_yaml_path</span><span class="p">(</span><span class="n">fn</span><span class="p">),</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
                 <span class="n">yaml_dict</span> <span class="o">=</span> <span class="n">flavio</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">yaml</span><span class="o">.</span><span class="n">load_include</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
@@ -1294,12 +1317,14 @@ table {
                 <span class="n">L</span> <span class="o">=</span> <span class="n">FastLikelihood</span><span class="o">.</span><span class="n">load_dict</span><span class="p">(</span><span class="n">yaml_dict</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">fast_likelihoods</span><span class="p">[</span><span class="n">fn</span><span class="p">]</span> <span class="o">=</span> <span class="n">L</span>
         <span class="k">for</span> <span class="n">fn</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_likelihoods_yaml</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">include_likelihoods</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">fn</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">include_likelihoods</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">include_likelihoods</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">fn</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">include_likelihoods</span><span class="p">:</span>
                 <span class="k">continue</span>
-            <span class="k">if</span> <span class="n">exclude_likelihoods</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">fn</span> <span class="ow">in</span> <span class="n">exclude_likelihoods</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">exclude_likelihoods</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">fn</span> <span class="ow">in</span> <span class="n">exclude_likelihoods</span><span class="p">:</span>
                 <span class="k">continue</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eft</span> <span class="o">!=</span> <span class="s1">&#39;SMEFT&#39;</span> <span class="ow">and</span> <span class="n">fn</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;likelihood_ewpt.yaml&#39;</span><span class="p">,</span>
-                                              <span class="s1">&#39;likelihood_zlfv.yaml&#39;</span><span class="p">,]:</span>
+                                              <span class="s1">&#39;likelihood_eeww.yaml&#39;</span><span class="p">,</span>
+                                              <span class="s1">&#39;likelihood_zlfv.yaml&#39;</span><span class="p">,</span>
+                                              <span class="s1">&#39;likelihood_higgs.yaml&#39;</span><span class="p">,]:</span>
                 <span class="k">continue</span>
             <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_yaml_path</span><span class="p">(</span><span class="n">fn</span><span class="p">),</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
                 <span class="n">L</span> <span class="o">=</span> <span class="n">Likelihood</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
@@ -1326,7 +1351,7 @@ table {
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;.yaml&#39;</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;.yaml&#39;</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">FileNotFoundError</span><span class="p">(</span><span class="s2">&quot;Likelihood YAML file &#39;{}&#39; was not found&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s2">&quot;Likelihood YAML file &#39;</span><span class="si">{}</span><span class="s2">&#39; was not found&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">make_measurement</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Initialize the likelihood by producing a pseudo-measurement containing both</span>
@@ -1351,7 +1376,7 @@ table {
             <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;Nexp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Nexp</span>
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">flh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fast_likelihoods</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">flh</span><span class="o">.</span><span class="n">make_measurement</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_sm_cov_loaded</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sm_cov_loaded</span> <span class="o">=</span> <span class="kc">True</span>
 
     <span class="k">def</span> <span class="nf">save_sm_covariances</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">folder</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">flh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fast_likelihoods</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -1383,7 +1408,7 @@ table {
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">log_likelihood_sm</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_log_likelihood_sm</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_log_likelihood_sm</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_log_likelihood_sm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_log_likelihood</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">par_dict_sm</span><span class="p">,</span> <span class="n">flavio</span><span class="o">.</span><span class="n">WilsonCoefficients</span><span class="p">())</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_log_likelihood_sm</span>
 
@@ -1394,7 +1419,7 @@ table {
                              <span class="s2">&quot; by calling `make_measurement`.&quot;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">get_ckm_sm</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">Vus</span><span class="p">,</span> <span class="n">Vcb</span><span class="p">,</span> <span class="n">Vub</span><span class="p">,</span> <span class="n">delta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ckm_scheme</span><span class="o">.</span><span class="n">ckm_np</span><span class="p">(</span><span class="n">w</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
+        <span class="n">Vus</span><span class="p">,</span> <span class="n">Vcb</span><span class="p">,</span> <span class="n">Vub</span><span class="p">,</span> <span class="n">delta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ckm_scheme</span><span class="o">.</span><span class="n">ckm_np</span><span class="p">(</span><span class="n">w</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
         <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;Vus&#39;</span><span class="p">:</span> <span class="n">Vus</span><span class="p">,</span> <span class="s1">&#39;Vcb&#39;</span><span class="p">:</span> <span class="n">Vcb</span><span class="p">,</span> <span class="s1">&#39;Vub&#39;</span><span class="p">:</span> <span class="n">Vub</span><span class="p">,</span> <span class="s1">&#39;delta&#39;</span><span class="p">:</span> <span class="n">delta</span><span class="p">}</span>
 
     <span class="nd">@property</span>
@@ -1410,7 +1435,7 @@ table {
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fix_ckm</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">par_dict_default</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_par_dict_sm</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_par_dict_sm</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">par_dict_sm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">par_dict_default</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
             <span class="n">par_dict_sm</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_ckm_sm</span><span class="p">())</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_par_dict_sm</span> <span class="o">=</span> <span class="n">par_dict_sm</span>
@@ -1419,7 +1444,7 @@ table {
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">obstable_sm</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_sm_cov_loaded</span><span class="p">()</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obstable_sm</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obstable_sm</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">info</span> <span class="o">=</span> <span class="n">tree</span><span class="p">()</span>  <span class="c1"># nested dict</span>
             <span class="k">for</span> <span class="n">flh_name</span><span class="p">,</span> <span class="n">flh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fast_likelihoods</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="c1"># loop over fast likelihoods: they only have a single &quot;measurement&quot;</span>
@@ -1427,8 +1452,8 @@ table {
                 <span class="n">ml</span> <span class="o">=</span> <span class="n">flh</span><span class="o">.</span><span class="n">full_measurement_likelihood</span>
                 <span class="n">pred_sm</span> <span class="o">=</span> <span class="n">ml</span><span class="o">.</span><span class="n">get_predictions_par</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">par_dict_sm</span><span class="p">,</span>
                                                  <span class="n">flavio</span><span class="o">.</span><span class="n">WilsonCoefficients</span><span class="p">())</span>
-                <span class="n">sm_cov</span> <span class="o">=</span> <span class="n">flh</span><span class="o">.</span><span class="n">sm_covariance</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-                <span class="n">_</span><span class="p">,</span> <span class="n">exp_cov</span> <span class="o">=</span> <span class="n">flh</span><span class="o">.</span><span class="n">exp_covariance</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+                <span class="n">sm_cov</span> <span class="o">=</span> <span class="n">flh</span><span class="o">.</span><span class="n">sm_covariance</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="n">_</span><span class="p">,</span> <span class="n">exp_cov</span> <span class="o">=</span> <span class="n">flh</span><span class="o">.</span><span class="n">exp_covariance</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
                 <span class="n">inspire_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_inspire_dict</span><span class="p">(</span><span class="n">flh</span><span class="o">.</span><span class="n">observables</span><span class="p">,</span> <span class="n">ml</span><span class="p">)</span>
                 <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">obs</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">flh</span><span class="o">.</span><span class="n">observables</span><span class="p">):</span>
                     <span class="n">info</span><span class="p">[</span><span class="n">obs</span><span class="p">][</span><span class="s1">&#39;lh_name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">flh_name</span>
@@ -1477,15 +1502,15 @@ table {
 <span class="sd">        `wilson.Wilson`.&quot;&quot;&quot;</span>
         <span class="n">ll</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">flh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fast_likelihoods</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">ll</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">flh</span><span class="o">.</span><span class="n">log_likelihood</span><span class="p">(</span><span class="n">par_dict</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="n">ll</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">flh</span><span class="o">.</span><span class="n">log_likelihood</span><span class="p">(</span><span class="n">par_dict</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">lh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihoods</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">ll</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">lh</span><span class="o">.</span><span class="n">log_likelihood</span><span class="p">(</span><span class="n">par_dict</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="n">ll</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">lh</span><span class="o">.</span><span class="n">log_likelihood</span><span class="p">(</span><span class="n">par_dict</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">clh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">custom_likelihoods</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">ll</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">clh</span><span class="o">.</span><span class="n">log_likelihood</span><span class="p">(</span><span class="n">par_dict</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="n">ll</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">clh</span><span class="o">.</span><span class="n">log_likelihood</span><span class="p">(</span><span class="n">par_dict</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ll</span>
 
     <span class="nd">@dispatch</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">parameter_point</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wc_dict</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">parameter_point</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wc_dict</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Choose a point in parameter space by providing a dictionary of</span>
 <span class="sd">        Wilson coefficient values (with keys corresponding to WCxf Wilson</span>
 <span class="sd">        coefficient names) and the input scale.&quot;&quot;&quot;</span>
@@ -1530,7 +1555,7 @@ table {
                     <span class="n">inspire_dict</span><span class="p">[</span><span class="n">obs</span><span class="p">]</span><span class="o">=</span><span class="p">[</span><span class="n">m_obj</span><span class="o">.</span><span class="n">inspire</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">inspire_dict</span>
 
-    <span class="k">def</span> <span class="nf">number_observations_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exclude_observables</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">number_observations_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exclude_observables</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get a dictionary of the number of &quot;observations&quot; for each</span>
 <span class="sd">        sublikelihood.</span>
 
@@ -1551,6 +1576,89 @@ table {
         <span class="n">nobs_dict</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">nobs_dict</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="s1">&#39;custom_&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">k</span><span class="p">])</span>
         <span class="k">return</span> <span class="n">nobs_dict</span>
 
+    <span class="k">def</span> <span class="nf">plot_data_2d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                     <span class="n">wc_fct</span><span class="p">,</span>
+                     <span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">,</span> <span class="n">y_min</span><span class="p">,</span> <span class="n">y_max</span><span class="p">,</span>
+                     <span class="n">scale</span><span class="p">,</span>
+                     <span class="n">steps</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+                     <span class="n">threads</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Compute the likelihood on a grid of two non-zero Wilson coefficients.</span>
+
+<span class="sd">        This method is meant for producing contour plots with `flavio.plots`</span>
+<span class="sd">        and `matplotlib` in the plane of two Wilson coefficients.</span>
+
+<span class="sd">        Parameters:</span>
+
+<span class="sd">        - `wc_fct`: function of two parameters x and y returning a dictionary</span>
+<span class="sd">                    with Wilson coefficients</span>
+<span class="sd">        - `x_min`: minimum value of Wilson coefficient on x axis</span>
+<span class="sd">        - `x_max`: maximum value of Wilson coefficient on x axis</span>
+<span class="sd">        - `y_min`: minimum value of Wilson coefficient on y axis</span>
+<span class="sd">        - `y_max`: maximum value of Wilson coefficient on y axis</span>
+<span class="sd">        - `scale`: either a function of two parameters x and y returning the</span>
+<span class="sd">                   renormalization scale in GeV, or a numerical value fixing the</span>
+<span class="sd">                   scale</span>
+<span class="sd">        - `steps`: number of steps in each direction. The computing time scales</span>
+<span class="sd">                   with the square of this number.</span>
+<span class="sd">        - `threads`: number of threads for parallel computation (default: 1)</span>
+
+<span class="sd">        Returns:</span>
+
+<span class="sd">        A dictionary of the  form</span>
+<span class="sd">        `{&#39;likelihood_A&#39;: dat_A, &#39;likelihood_B&#39;: dat_B, ...}`</span>
+<span class="sd">        where `&#39;likelihood_A&#39;` etc. are the names of the sub- and custom</span>
+<span class="sd">        likelihoods (as return by `GlobalLikelihoodPoint.log_likelihood_dict`)</span>
+<span class="sd">        and `dat_A` etc. are dictionaries with the keys `x`, `y`, `z`, that</span>
+<span class="sd">        can be directly fed to the `flavio.plots.contour` plot function.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">,</span> <span class="n">steps</span><span class="p">)</span>
+        <span class="n">_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">y_min</span><span class="p">,</span> <span class="n">y_max</span><span class="p">,</span> <span class="n">steps</span><span class="p">)</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">_x</span><span class="p">,</span> <span class="n">_y</span><span class="p">)</span>
+        <span class="n">xy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">steps</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">xy_enumerated</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="n">xy</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">scale</span><span class="p">,</span><span class="n">Number</span><span class="p">):</span>
+            <span class="n">scale_fct</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">_scale_fct_fixed</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">scale_fct</span> <span class="o">=</span> <span class="n">scale</span>
+        <span class="n">ll</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">_log_likelihood_2d</span><span class="p">,</span> <span class="n">gl</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">wc_fct</span><span class="o">=</span><span class="n">wc_fct</span><span class="p">,</span> <span class="n">scale_fct</span><span class="o">=</span><span class="n">scale_fct</span><span class="p">)</span>
+        <span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">Pool</span>
+        <span class="k">if</span> <span class="n">threads</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">pool</span> <span class="o">=</span>  <span class="n">Pool</span><span class="p">(</span><span class="n">threads</span><span class="p">)</span>
+            <span class="n">ll_dict_list_enumerated</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">ll</span><span class="p">,</span> <span class="n">xy_enumerated</span><span class="p">)</span>
+            <span class="n">pool</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="n">pool</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ll_dict_list_enumerated</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">ll</span><span class="p">,</span> <span class="n">xy_enumerated</span><span class="p">)</span>
+        <span class="n">ll_dict_list</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">ll_dict</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">ll_dict</span> <span class="ow">in</span>
+            <span class="nb">sorted</span><span class="p">(</span><span class="n">ll_dict_list_enumerated</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">itemgetter</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+        <span class="p">]</span>
+        <span class="n">plotdata</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="n">ll_dict_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>  <span class="c1"># look at first dict to fix keys</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">ll_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">ll_dict</span> <span class="ow">in</span> <span class="n">ll_dict_list</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">steps</span><span class="p">,</span> <span class="n">steps</span><span class="p">))</span>
+            <span class="n">plotdata</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="n">y</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">:</span> <span class="n">z</span><span class="p">}</span>
+        <span class="k">return</span> <span class="n">plotdata</span>
+
+<span class="k">def</span> <span class="nf">_scale_fct_fixed</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">scale</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This is a helper function that is necessary because multiprocessing requires</span>
+<span class="sd">    a picklable (i.e. top-level) object for parallel computation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">scale</span>
+
+<span class="k">def</span> <span class="nf">_log_likelihood_2d</span><span class="p">(</span><span class="n">xy_enumerated</span><span class="p">,</span> <span class="n">gl</span><span class="p">,</span> <span class="n">wc_fct</span><span class="p">,</span> <span class="n">scale_fct</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute the likelihood on a 2D grid of 2 Wilson coefficients.</span>
+
+<span class="sd">    This function is necessary because multiprocessing requires a picklable</span>
+<span class="sd">    (i.e. top-level) object for parallel computation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">number</span><span class="p">,</span> <span class="n">xy</span> <span class="o">=</span> <span class="n">xy_enumerated</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">xy</span>
+    <span class="n">pp</span> <span class="o">=</span> <span class="n">gl</span><span class="o">.</span><span class="n">parameter_point</span><span class="p">(</span><span class="n">wc_fct</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">scale_fct</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span>
+    <span class="n">ll_dict</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">log_likelihood_dict</span><span class="p">()</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">number</span><span class="p">,</span> <span class="n">ll_dict</span><span class="p">)</span>
+
 
 <span class="k">class</span> <span class="nc">CustomLikelihood</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">likelihood</span><span class="p">,</span> <span class="n">observables</span><span class="p">):</span>
@@ -1570,7 +1678,7 @@ table {
                     <span class="n">exclude_obs</span><span class="p">[</span><span class="n">lh_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">exclude_observables</span>
         <span class="k">return</span> <span class="n">exclude_obs</span>
 
-    <span class="k">def</span> <span class="nf">log_likelihood</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_dict</span><span class="p">,</span> <span class="n">wc_obj</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">log_likelihood</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_dict</span><span class="p">,</span> <span class="n">wc_obj</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="n">custom_log_likelihood</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">for</span> <span class="n">lh_name</span><span class="p">,</span> <span class="n">exclude_observables</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">exclude_obs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">lh</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">fast_likelihoods</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">lh_name</span><span class="p">)</span>
@@ -1615,7 +1723,7 @@ table {
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">likelihood</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span>
-                 <span class="n">fix_ckm</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+                 <span class="n">fix_ckm</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Initialize the `GlobalLikelihoodPoint` instance.</span>
 
 <span class="sd">        Parameters:</span>
@@ -1631,14 +1739,14 @@ table {
         <span class="n">likelihood</span><span class="o">.</span><span class="n">_check_sm_cov_loaded</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">w_input</span> <span class="o">=</span> <span class="n">w</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fix_ckm</span> <span class="o">=</span> <span class="n">fix_ckm</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_w</span> <span class="o">=</span> <span class="bp">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_obstable_tree_cache</span> <span class="o">=</span> <span class="bp">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_log_likelihood_dict</span> <span class="o">=</span> <span class="bp">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_par_dict_np</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_w</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_obstable_tree_cache</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_log_likelihood_dict</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_par_dict_np</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">w</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_w</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_w</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">w</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">w_input</span>
             <span class="n">opt</span> <span class="o">=</span> <span class="n">w</span><span class="o">.</span><span class="n">get_option</span><span class="p">(</span><span class="s1">&#39;parameters&#39;</span><span class="p">)</span>
             <span class="n">par</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">par_dict_np</span>
@@ -1670,7 +1778,7 @@ table {
 <span class="sd">        returns the SM values.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fix_ckm</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">par_dict_sm</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_par_dict_np</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_par_dict_np</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">par_dict_np</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">par_dict_default</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
             <span class="n">par_dict_np</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_ckm_np</span><span class="p">())</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_par_dict_np</span> <span class="o">=</span> <span class="n">par_dict_np</span>
@@ -1689,7 +1797,7 @@ table {
 <span class="sd">        for the individual contributions.</span>
 
 <span class="sd">        Cached after the first call.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_log_likelihood_dict</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_log_likelihood_dict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_log_likelihood_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_delta_log_likelihood</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_log_likelihood_dict</span>
 
@@ -1754,8 +1862,8 @@ table {
             <span class="bp">self</span><span class="o">.</span><span class="n">_obstable_tree_cache</span> <span class="o">=</span> <span class="n">info</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obstable_tree_cache</span>
 
-    <span class="k">def</span> <span class="nf">obstable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_pull_exp</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">sort_by</span><span class="o">=</span><span class="s1">&#39;pull exp.&#39;</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                 <span class="n">min_val</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">max_val</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">obstable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_pull_exp</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">sort_by</span><span class="o">=</span><span class="s1">&#39;pull exp.&#39;</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">min_val</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_val</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Return a pandas data frame with the central values and uncertainties</span>
 <span class="sd">        as well as the pulls with respect to the experimental and the SM values for each observable.</span>
 
@@ -1767,25 +1875,25 @@ table {
                      <span class="s1">&#39;th. unc.&#39;</span><span class="p">,</span> <span class="s1">&#39;theory&#39;</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">sort_by</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sort_keys</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;&#39;{}&#39; is not an allowed value for sort_by. Allowed values are &quot;</span>
-                <span class="s2">&quot;&#39;{}&#39;, and &#39;{}&#39;.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sort_by</span><span class="p">,</span> <span class="s2">&quot;&#39;, &#39;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">sort_keys</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span>
+                <span class="s2">&quot;&#39;</span><span class="si">{}</span><span class="s2">&#39; is not an allowed value for sort_by. Allowed values are &quot;</span>
+                <span class="s2">&quot;&#39;</span><span class="si">{}</span><span class="s2">&#39;, and &#39;</span><span class="si">{}</span><span class="s2">&#39;.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sort_by</span><span class="p">,</span> <span class="s2">&quot;&#39;, &#39;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">sort_keys</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span>
                                          <span class="n">sort_keys</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
             <span class="p">)</span>
         <span class="n">info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obstable_tree</span>
-        <span class="n">subset</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="n">subset</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">sort_by</span> <span class="o">==</span> <span class="s1">&#39;pull exp.&#39;</span><span class="p">:</span>
             <span class="c1"># if sorted by pull exp., use descending order as default</span>
-            <span class="k">if</span> <span class="n">ascending</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-                <span class="n">ascending</span> <span class="o">=</span> <span class="bp">False</span>
-            <span class="k">if</span> <span class="n">min_val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">ascending</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">ascending</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="n">min_val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">min_val</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">min_pull_exp</span><span class="p">,</span> <span class="n">min_val</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">min_val</span> <span class="o">=</span> <span class="n">min_pull_exp</span>
         <span class="k">elif</span> <span class="n">min_pull_exp</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">subset</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;pull exp.&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">min_pull_exp</span>
         <span class="c1"># if sorted not by pull exp., use ascending order as default</span>
-        <span class="k">if</span> <span class="n">ascending</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="n">ascending</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">if</span> <span class="n">ascending</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ascending</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="n">info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obstable_filter_sort</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">sortkey</span><span class="o">=</span><span class="n">sort_by</span><span class="p">,</span>
                                           <span class="n">ascending</span><span class="o">=</span><span class="n">ascending</span><span class="p">,</span>
                                           <span class="n">min_val</span><span class="o">=</span><span class="n">min_val</span><span class="p">,</span> <span class="n">max_val</span><span class="o">=</span><span class="n">max_val</span><span class="p">,</span>
@@ -1806,24 +1914,24 @@ table {
         <span class="k">return</span> <span class="n">df</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_obstable_filter_sort</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">sortkey</span><span class="o">=</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-                              <span class="n">min_val</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">max_val</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                              <span class="n">subset</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">max_rows</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_obstable_filter_sort</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">sortkey</span><span class="o">=</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                              <span class="n">min_val</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_val</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                              <span class="n">subset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_rows</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="c1"># impose min_val and max_val</span>
-        <span class="k">if</span> <span class="n">min_val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">min_val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">info</span> <span class="o">=</span> <span class="p">{</span><span class="n">obs</span><span class="p">:</span><span class="n">row</span> <span class="k">for</span> <span class="n">obs</span><span class="p">,</span><span class="n">row</span> <span class="ow">in</span> <span class="n">info</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
                     <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="n">sortkey</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">min_val</span><span class="p">}</span>
-        <span class="k">if</span> <span class="n">max_val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">max_val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">info</span> <span class="o">=</span> <span class="p">{</span><span class="n">obs</span><span class="p">:</span><span class="n">row</span> <span class="k">for</span> <span class="n">obs</span><span class="p">,</span><span class="n">row</span> <span class="ow">in</span> <span class="n">info</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
                     <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="n">sortkey</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">max_val</span><span class="p">}</span>
         <span class="c1"># get only subset:</span>
-        <span class="k">if</span> <span class="n">subset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">subset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">info</span> <span class="o">=</span> <span class="p">{</span><span class="n">obs</span><span class="p">:</span><span class="n">row</span> <span class="k">for</span> <span class="n">obs</span><span class="p">,</span><span class="n">row</span> <span class="ow">in</span> <span class="n">info</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">subset</span><span class="p">(</span><span class="n">row</span><span class="p">)}</span>
         <span class="c1"># sort</span>
         <span class="n">info</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">info</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">sortkey</span><span class="p">],</span>
                                   <span class="n">reverse</span><span class="o">=</span><span class="p">(</span><span class="ow">not</span> <span class="n">ascending</span><span class="p">)))</span>
         <span class="c1"># restrict number of rows per tabular to max_rows</span>
-        <span class="k">if</span> <span class="n">max_rows</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">info</span><span class="p">)</span><span class="o">&lt;=</span><span class="n">max_rows</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">max_rows</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">info</span><span class="p">)</span><span class="o">&lt;=</span><span class="n">max_rows</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">info</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">info_list</span> <span class="o">=</span> <span class="p">[]</span>
@@ -1869,7 +1977,7 @@ table {
                     <span class="n">exclude_obs</span><span class="p">[</span><span class="n">lh_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">exclude_observables</span>
         <span class="k">return</span> <span class="n">exclude_obs</span>
 
-    <span class="k">def</span> <span class="nf">log_likelihood</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_dict</span><span class="p">,</span> <span class="n">wc_obj</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">log_likelihood</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_dict</span><span class="p">,</span> <span class="n">wc_obj</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="n">custom_log_likelihood</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">for</span> <span class="n">lh_name</span><span class="p">,</span> <span class="n">exclude_observables</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">exclude_obs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">lh</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">fast_likelihoods</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">lh_name</span><span class="p">)</span>
@@ -1978,7 +2086,7 @@ of observables.</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-smelli.classes.CustomLikelihood.log_likelihood', this);">Show source &equiv;</a></p>
   <div id="source-smelli.classes.CustomLikelihood.log_likelihood" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">log_likelihood</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_dict</span><span class="p">,</span> <span class="n">wc_obj</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">log_likelihood</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_dict</span><span class="p">,</span> <span class="n">wc_obj</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="n">custom_log_likelihood</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="k">for</span> <span class="n">lh_name</span><span class="p">,</span> <span class="n">exclude_observables</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">exclude_obs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="n">lh</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">fast_likelihoods</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">lh_name</span><span class="p">)</span>
@@ -2084,6 +2192,11 @@ experimental central values and covariances or load them from data files</li>
 
     <span class="n">_default_bases</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;SMEFT&#39;</span><span class="p">:</span> <span class="s1">&#39;Warsaw&#39;</span><span class="p">,</span> <span class="s1">&#39;WET&#39;</span><span class="p">:</span> <span class="s1">&#39;flavio&#39;</span><span class="p">}</span>
 
+    <span class="n">_fast_likelihoods_yaml_fixckm</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s1">&#39;fast_likelihood_quarks_fixckm.yaml&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;fast_likelihood_leptons.yaml&#39;</span>
+    <span class="p">]</span>
+
     <span class="n">_fast_likelihoods_yaml</span> <span class="o">=</span> <span class="p">[</span>
         <span class="s1">&#39;fast_likelihood_quarks.yaml&#39;</span><span class="p">,</span>
         <span class="s1">&#39;fast_likelihood_leptons.yaml&#39;</span>
@@ -2091,6 +2204,7 @@ experimental central values and covariances or load them from data files</li>
 
     <span class="n">_likelihoods_yaml</span> <span class="o">=</span> <span class="p">[</span>
         <span class="s1">&#39;likelihood_ewpt.yaml&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;likelihood_eeww.yaml&#39;</span><span class="p">,</span>
         <span class="s1">&#39;likelihood_lept.yaml&#39;</span><span class="p">,</span>
         <span class="s1">&#39;likelihood_rd_rds.yaml&#39;</span><span class="p">,</span>
         <span class="s1">&#39;likelihood_lfu_fccc.yaml&#39;</span><span class="p">,</span>
@@ -2099,17 +2213,18 @@ experimental central values and covariances or load them from data files</li>
         <span class="s1">&#39;likelihood_bqnunu.yaml&#39;</span><span class="p">,</span>
         <span class="s1">&#39;likelihood_lfv.yaml&#39;</span><span class="p">,</span>
         <span class="s1">&#39;likelihood_zlfv.yaml&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;likelihood_higgs.yaml&#39;</span><span class="p">,</span>
     <span class="p">]</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eft</span><span class="o">=</span><span class="s1">&#39;SMEFT&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                 <span class="n">par_dict</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                 <span class="n">include_likelihoods</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                 <span class="n">exclude_likelihoods</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eft</span><span class="o">=</span><span class="s1">&#39;SMEFT&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">par_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">include_likelihoods</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">exclude_likelihoods</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">Nexp</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span>
-                 <span class="n">exp_cov_folder</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                 <span class="n">sm_cov_folder</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                 <span class="n">custom_likelihoods</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                 <span class="n">fix_ckm</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                 <span class="n">exp_cov_folder</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">sm_cov_folder</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">custom_likelihoods</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">fix_ckm</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">ckm_scheme</span><span class="o">=</span><span class="s1">&#39;CKMSchemeRmuBtaunuBxlnuDeltaM&#39;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Initialize the likelihood.</span>
 
@@ -2160,13 +2275,15 @@ experimental central values and covariances or load them from data files</li>
         <span class="c1"># take missing parameters from flavio defaults</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">par_dict_default</span> <span class="o">=</span> <span class="n">flavio</span><span class="o">.</span><span class="n">default_parameters</span><span class="o">.</span><span class="n">get_central_all</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">par_dict_default</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">par_dict</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_par_dict_sm</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_par_dict_sm</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fix_ckm</span> <span class="o">=</span> <span class="n">fix_ckm</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fix_ckm</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_fast_likelihoods_yaml</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fast_likelihoods_yaml_fixckm</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_ckm_scheme</span> <span class="o">=</span> <span class="n">get_ckm_schemes</span><span class="p">()[</span><span class="n">ckm_scheme</span><span class="p">]</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_ckm_scheme_name</span> <span class="o">=</span> <span class="n">ckm_scheme</span>
         <span class="k">except</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;CKM scheme &#39;{}&#39; is not defined.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ckm_scheme</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;CKM scheme &#39;</span><span class="si">{}</span><span class="s2">&#39; is not defined.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ckm_scheme</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">likelihoods</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fast_likelihoods</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_custom_likelihoods_dict</span> <span class="o">=</span> <span class="n">custom_likelihoods</span> <span class="ow">or</span> <span class="p">{}</span>
@@ -2174,38 +2291,43 @@ experimental central values and covariances or load them from data files</li>
         <span class="bp">self</span><span class="o">.</span><span class="n">_load_likelihoods</span><span class="p">(</span><span class="n">include_likelihoods</span><span class="o">=</span><span class="n">include_likelihoods</span><span class="p">,</span>
                                <span class="n">exclude_likelihoods</span><span class="o">=</span><span class="n">exclude_likelihoods</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_Nexp</span> <span class="o">=</span> <span class="n">Nexp</span>
-        <span class="k">if</span> <span class="n">exp_cov_folder</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">exp_cov_folder</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">load_exp_covariances</span><span class="p">(</span><span class="n">exp_cov_folder</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_sm_cov_loaded</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sm_cov_loaded</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">sm_cov_folder</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">sm_cov_folder</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">load_sm_covariances</span><span class="p">(</span><span class="n">get_datapath</span><span class="p">(</span><span class="s1">&#39;smelli&#39;</span><span class="p">,</span> <span class="s1">&#39;data/cache&#39;</span><span class="p">))</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">load_sm_covariances</span><span class="p">(</span><span class="n">sm_cov_folder</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_sm_cov_loaded</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_sm_cov_loaded</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">make_measurement</span><span class="p">()</span>
         <span class="k">except</span> <span class="p">(</span><span class="ne">KeyboardInterrupt</span><span class="p">,</span> <span class="ne">SystemExit</span><span class="p">):</span>
             <span class="k">raise</span>
         <span class="k">except</span><span class="p">:</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;There was a problem loading the SM covariances. &quot;</span>
                           <span class="s2">&quot;Please recompute them with `make_measurement`.&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_log_likelihood_sm</span> <span class="o">=</span> <span class="bp">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_obstable_sm</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_log_likelihood_sm</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_obstable_sm</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">def</span> <span class="nf">_load_likelihoods</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                          <span class="n">include_likelihoods</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                          <span class="n">exclude_likelihoods</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">include_likelihoods</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">exclude_likelihoods</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                          <span class="n">include_likelihoods</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                          <span class="n">exclude_likelihoods</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">include_likelihoods</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">exclude_likelihoods</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;include_likelihoods and exclude_likelihoods &quot;</span>
                              <span class="s2">&quot;should not be specified simultaneously.&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">argument_name</span><span class="p">,</span> <span class="n">argument</span> <span class="ow">in</span> <span class="p">[(</span><span class="s1">&#39;exclude_likelihoods&#39;</span><span class="p">,</span> <span class="n">exclude_likelihoods</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;include_likelihoods&#39;</span><span class="p">,</span><span class="n">include_likelihoods</span><span class="p">)]:</span>
+            <span class="k">if</span> <span class="n">argument</span><span class="p">:</span>
+                <span class="n">unknown_likelihoods</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">argument</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fast_likelihoods_yaml</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_likelihoods_yaml</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">unknown_likelihoods</span><span class="p">:</span>  
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> contains unknown likelihoods: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">argument_name</span><span class="p">,</span><span class="n">unknown_likelihoods</span><span class="p">))</span>
         <span class="c1"># load ckm parameters for given CKM scheme</span>
-        <span class="n">par_ckm_file</span> <span class="o">=</span> <span class="s1">&#39;par_ckm_{}.yaml&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ckm_scheme_name</span><span class="p">)</span>
+        <span class="n">par_ckm_file</span> <span class="o">=</span> <span class="s1">&#39;par_ckm_</span><span class="si">{}</span><span class="s1">.yaml&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ckm_scheme_name</span><span class="p">)</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_yaml_path</span><span class="p">(</span><span class="n">par_ckm_file</span><span class="p">),</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="n">par_ckm_dict</span> <span class="o">=</span> <span class="n">flavio</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">yaml</span><span class="o">.</span><span class="n">load_include</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">fn</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fast_likelihoods_yaml</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">include_likelihoods</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">fn</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">include_likelihoods</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">include_likelihoods</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">fn</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">include_likelihoods</span><span class="p">:</span>
                 <span class="k">continue</span>
-            <span class="k">if</span> <span class="n">exclude_likelihoods</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">fn</span> <span class="ow">in</span> <span class="n">exclude_likelihoods</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">exclude_likelihoods</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">fn</span> <span class="ow">in</span> <span class="n">exclude_likelihoods</span><span class="p">:</span>
                 <span class="k">continue</span>
             <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_yaml_path</span><span class="p">(</span><span class="n">fn</span><span class="p">),</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
                 <span class="n">yaml_dict</span> <span class="o">=</span> <span class="n">flavio</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">yaml</span><span class="o">.</span><span class="n">load_include</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
@@ -2214,12 +2336,14 @@ experimental central values and covariances or load them from data files</li>
                 <span class="n">L</span> <span class="o">=</span> <span class="n">FastLikelihood</span><span class="o">.</span><span class="n">load_dict</span><span class="p">(</span><span class="n">yaml_dict</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">fast_likelihoods</span><span class="p">[</span><span class="n">fn</span><span class="p">]</span> <span class="o">=</span> <span class="n">L</span>
         <span class="k">for</span> <span class="n">fn</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_likelihoods_yaml</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">include_likelihoods</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">fn</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">include_likelihoods</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">include_likelihoods</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">fn</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">include_likelihoods</span><span class="p">:</span>
                 <span class="k">continue</span>
-            <span class="k">if</span> <span class="n">exclude_likelihoods</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">fn</span> <span class="ow">in</span> <span class="n">exclude_likelihoods</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">exclude_likelihoods</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">fn</span> <span class="ow">in</span> <span class="n">exclude_likelihoods</span><span class="p">:</span>
                 <span class="k">continue</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eft</span> <span class="o">!=</span> <span class="s1">&#39;SMEFT&#39;</span> <span class="ow">and</span> <span class="n">fn</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;likelihood_ewpt.yaml&#39;</span><span class="p">,</span>
-                                              <span class="s1">&#39;likelihood_zlfv.yaml&#39;</span><span class="p">,]:</span>
+                                              <span class="s1">&#39;likelihood_eeww.yaml&#39;</span><span class="p">,</span>
+                                              <span class="s1">&#39;likelihood_zlfv.yaml&#39;</span><span class="p">,</span>
+                                              <span class="s1">&#39;likelihood_higgs.yaml&#39;</span><span class="p">,]:</span>
                 <span class="k">continue</span>
             <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_yaml_path</span><span class="p">(</span><span class="n">fn</span><span class="p">),</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
                 <span class="n">L</span> <span class="o">=</span> <span class="n">Likelihood</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
@@ -2246,7 +2370,7 @@ experimental central values and covariances or load them from data files</li>
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;.yaml&#39;</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;.yaml&#39;</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">FileNotFoundError</span><span class="p">(</span><span class="s2">&quot;Likelihood YAML file &#39;{}&#39; was not found&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s2">&quot;Likelihood YAML file &#39;</span><span class="si">{}</span><span class="s2">&#39; was not found&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">make_measurement</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Initialize the likelihood by producing a pseudo-measurement containing both</span>
@@ -2271,7 +2395,7 @@ experimental central values and covariances or load them from data files</li>
             <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;Nexp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Nexp</span>
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">flh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fast_likelihoods</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">flh</span><span class="o">.</span><span class="n">make_measurement</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_sm_cov_loaded</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sm_cov_loaded</span> <span class="o">=</span> <span class="kc">True</span>
 
     <span class="k">def</span> <span class="nf">save_sm_covariances</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">folder</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">flh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fast_likelihoods</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -2303,7 +2427,7 @@ experimental central values and covariances or load them from data files</li>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">log_likelihood_sm</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_log_likelihood_sm</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_log_likelihood_sm</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_log_likelihood_sm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_log_likelihood</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">par_dict_sm</span><span class="p">,</span> <span class="n">flavio</span><span class="o">.</span><span class="n">WilsonCoefficients</span><span class="p">())</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_log_likelihood_sm</span>
 
@@ -2314,7 +2438,7 @@ experimental central values and covariances or load them from data files</li>
                              <span class="s2">&quot; by calling `make_measurement`.&quot;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">get_ckm_sm</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">Vus</span><span class="p">,</span> <span class="n">Vcb</span><span class="p">,</span> <span class="n">Vub</span><span class="p">,</span> <span class="n">delta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ckm_scheme</span><span class="o">.</span><span class="n">ckm_np</span><span class="p">(</span><span class="n">w</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
+        <span class="n">Vus</span><span class="p">,</span> <span class="n">Vcb</span><span class="p">,</span> <span class="n">Vub</span><span class="p">,</span> <span class="n">delta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ckm_scheme</span><span class="o">.</span><span class="n">ckm_np</span><span class="p">(</span><span class="n">w</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
         <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;Vus&#39;</span><span class="p">:</span> <span class="n">Vus</span><span class="p">,</span> <span class="s1">&#39;Vcb&#39;</span><span class="p">:</span> <span class="n">Vcb</span><span class="p">,</span> <span class="s1">&#39;Vub&#39;</span><span class="p">:</span> <span class="n">Vub</span><span class="p">,</span> <span class="s1">&#39;delta&#39;</span><span class="p">:</span> <span class="n">delta</span><span class="p">}</span>
 
     <span class="nd">@property</span>
@@ -2330,7 +2454,7 @@ experimental central values and covariances or load them from data files</li>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fix_ckm</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">par_dict_default</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_par_dict_sm</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_par_dict_sm</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">par_dict_sm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">par_dict_default</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
             <span class="n">par_dict_sm</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_ckm_sm</span><span class="p">())</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_par_dict_sm</span> <span class="o">=</span> <span class="n">par_dict_sm</span>
@@ -2339,7 +2463,7 @@ experimental central values and covariances or load them from data files</li>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">obstable_sm</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_sm_cov_loaded</span><span class="p">()</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obstable_sm</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obstable_sm</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">info</span> <span class="o">=</span> <span class="n">tree</span><span class="p">()</span>  <span class="c1"># nested dict</span>
             <span class="k">for</span> <span class="n">flh_name</span><span class="p">,</span> <span class="n">flh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fast_likelihoods</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="c1"># loop over fast likelihoods: they only have a single &quot;measurement&quot;</span>
@@ -2347,8 +2471,8 @@ experimental central values and covariances or load them from data files</li>
                 <span class="n">ml</span> <span class="o">=</span> <span class="n">flh</span><span class="o">.</span><span class="n">full_measurement_likelihood</span>
                 <span class="n">pred_sm</span> <span class="o">=</span> <span class="n">ml</span><span class="o">.</span><span class="n">get_predictions_par</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">par_dict_sm</span><span class="p">,</span>
                                                  <span class="n">flavio</span><span class="o">.</span><span class="n">WilsonCoefficients</span><span class="p">())</span>
-                <span class="n">sm_cov</span> <span class="o">=</span> <span class="n">flh</span><span class="o">.</span><span class="n">sm_covariance</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-                <span class="n">_</span><span class="p">,</span> <span class="n">exp_cov</span> <span class="o">=</span> <span class="n">flh</span><span class="o">.</span><span class="n">exp_covariance</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+                <span class="n">sm_cov</span> <span class="o">=</span> <span class="n">flh</span><span class="o">.</span><span class="n">sm_covariance</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="n">_</span><span class="p">,</span> <span class="n">exp_cov</span> <span class="o">=</span> <span class="n">flh</span><span class="o">.</span><span class="n">exp_covariance</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
                 <span class="n">inspire_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_inspire_dict</span><span class="p">(</span><span class="n">flh</span><span class="o">.</span><span class="n">observables</span><span class="p">,</span> <span class="n">ml</span><span class="p">)</span>
                 <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">obs</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">flh</span><span class="o">.</span><span class="n">observables</span><span class="p">):</span>
                     <span class="n">info</span><span class="p">[</span><span class="n">obs</span><span class="p">][</span><span class="s1">&#39;lh_name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">flh_name</span>
@@ -2397,15 +2521,15 @@ experimental central values and covariances or load them from data files</li>
 <span class="sd">        `wilson.Wilson`.&quot;&quot;&quot;</span>
         <span class="n">ll</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">flh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fast_likelihoods</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">ll</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">flh</span><span class="o">.</span><span class="n">log_likelihood</span><span class="p">(</span><span class="n">par_dict</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="n">ll</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">flh</span><span class="o">.</span><span class="n">log_likelihood</span><span class="p">(</span><span class="n">par_dict</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">lh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihoods</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">ll</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">lh</span><span class="o">.</span><span class="n">log_likelihood</span><span class="p">(</span><span class="n">par_dict</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="n">ll</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">lh</span><span class="o">.</span><span class="n">log_likelihood</span><span class="p">(</span><span class="n">par_dict</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">clh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">custom_likelihoods</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">ll</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">clh</span><span class="o">.</span><span class="n">log_likelihood</span><span class="p">(</span><span class="n">par_dict</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="n">ll</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">clh</span><span class="o">.</span><span class="n">log_likelihood</span><span class="p">(</span><span class="n">par_dict</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ll</span>
 
     <span class="nd">@dispatch</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">parameter_point</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wc_dict</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">parameter_point</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wc_dict</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Choose a point in parameter space by providing a dictionary of</span>
 <span class="sd">        Wilson coefficient values (with keys corresponding to WCxf Wilson</span>
 <span class="sd">        coefficient names) and the input scale.&quot;&quot;&quot;</span>
@@ -2450,7 +2574,7 @@ experimental central values and covariances or load them from data files</li>
                     <span class="n">inspire_dict</span><span class="p">[</span><span class="n">obs</span><span class="p">]</span><span class="o">=</span><span class="p">[</span><span class="n">m_obj</span><span class="o">.</span><span class="n">inspire</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">inspire_dict</span>
 
-    <span class="k">def</span> <span class="nf">number_observations_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exclude_observables</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">number_observations_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exclude_observables</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get a dictionary of the number of &quot;observations&quot; for each</span>
 <span class="sd">        sublikelihood.</span>
 
@@ -2470,6 +2594,70 @@ experimental central values and covariances or load them from data files</li>
             <span class="n">nobs_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">clh</span><span class="o">.</span><span class="n">get_number_observations</span><span class="p">()</span>
         <span class="n">nobs_dict</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">nobs_dict</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="s1">&#39;custom_&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">k</span><span class="p">])</span>
         <span class="k">return</span> <span class="n">nobs_dict</span>
+
+    <span class="k">def</span> <span class="nf">plot_data_2d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                     <span class="n">wc_fct</span><span class="p">,</span>
+                     <span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">,</span> <span class="n">y_min</span><span class="p">,</span> <span class="n">y_max</span><span class="p">,</span>
+                     <span class="n">scale</span><span class="p">,</span>
+                     <span class="n">steps</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+                     <span class="n">threads</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Compute the likelihood on a grid of two non-zero Wilson coefficients.</span>
+
+<span class="sd">        This method is meant for producing contour plots with `flavio.plots`</span>
+<span class="sd">        and `matplotlib` in the plane of two Wilson coefficients.</span>
+
+<span class="sd">        Parameters:</span>
+
+<span class="sd">        - `wc_fct`: function of two parameters x and y returning a dictionary</span>
+<span class="sd">                    with Wilson coefficients</span>
+<span class="sd">        - `x_min`: minimum value of Wilson coefficient on x axis</span>
+<span class="sd">        - `x_max`: maximum value of Wilson coefficient on x axis</span>
+<span class="sd">        - `y_min`: minimum value of Wilson coefficient on y axis</span>
+<span class="sd">        - `y_max`: maximum value of Wilson coefficient on y axis</span>
+<span class="sd">        - `scale`: either a function of two parameters x and y returning the</span>
+<span class="sd">                   renormalization scale in GeV, or a numerical value fixing the</span>
+<span class="sd">                   scale</span>
+<span class="sd">        - `steps`: number of steps in each direction. The computing time scales</span>
+<span class="sd">                   with the square of this number.</span>
+<span class="sd">        - `threads`: number of threads for parallel computation (default: 1)</span>
+
+<span class="sd">        Returns:</span>
+
+<span class="sd">        A dictionary of the  form</span>
+<span class="sd">        `{&#39;likelihood_A&#39;: dat_A, &#39;likelihood_B&#39;: dat_B, ...}`</span>
+<span class="sd">        where `&#39;likelihood_A&#39;` etc. are the names of the sub- and custom</span>
+<span class="sd">        likelihoods (as return by `GlobalLikelihoodPoint.log_likelihood_dict`)</span>
+<span class="sd">        and `dat_A` etc. are dictionaries with the keys `x`, `y`, `z`, that</span>
+<span class="sd">        can be directly fed to the `flavio.plots.contour` plot function.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">,</span> <span class="n">steps</span><span class="p">)</span>
+        <span class="n">_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">y_min</span><span class="p">,</span> <span class="n">y_max</span><span class="p">,</span> <span class="n">steps</span><span class="p">)</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">_x</span><span class="p">,</span> <span class="n">_y</span><span class="p">)</span>
+        <span class="n">xy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">steps</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">xy_enumerated</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="n">xy</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">scale</span><span class="p">,</span><span class="n">Number</span><span class="p">):</span>
+            <span class="n">scale_fct</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">_scale_fct_fixed</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">scale_fct</span> <span class="o">=</span> <span class="n">scale</span>
+        <span class="n">ll</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">_log_likelihood_2d</span><span class="p">,</span> <span class="n">gl</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">wc_fct</span><span class="o">=</span><span class="n">wc_fct</span><span class="p">,</span> <span class="n">scale_fct</span><span class="o">=</span><span class="n">scale_fct</span><span class="p">)</span>
+        <span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">Pool</span>
+        <span class="k">if</span> <span class="n">threads</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">pool</span> <span class="o">=</span>  <span class="n">Pool</span><span class="p">(</span><span class="n">threads</span><span class="p">)</span>
+            <span class="n">ll_dict_list_enumerated</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">ll</span><span class="p">,</span> <span class="n">xy_enumerated</span><span class="p">)</span>
+            <span class="n">pool</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="n">pool</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ll_dict_list_enumerated</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">ll</span><span class="p">,</span> <span class="n">xy_enumerated</span><span class="p">)</span>
+        <span class="n">ll_dict_list</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">ll_dict</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">ll_dict</span> <span class="ow">in</span>
+            <span class="nb">sorted</span><span class="p">(</span><span class="n">ll_dict_list_enumerated</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">itemgetter</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+        <span class="p">]</span>
+        <span class="n">plotdata</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="n">ll_dict_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>  <span class="c1"># look at first dict to fix keys</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">ll_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">ll_dict</span> <span class="ow">in</span> <span class="n">ll_dict_list</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">steps</span><span class="p">,</span> <span class="n">steps</span><span class="p">))</span>
+            <span class="n">plotdata</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="n">y</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">:</span> <span class="n">z</span><span class="p">}</span>
+        <span class="k">return</span> <span class="n">plotdata</span>
 </pre></div>
 
   </div>
@@ -2536,15 +2724,15 @@ from the measurement of four input observables:
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-smelli.classes.GlobalLikelihood.__init__', this);">Show source &equiv;</a></p>
   <div id="source-smelli.classes.GlobalLikelihood.__init__" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eft</span><span class="o">=</span><span class="s1">&#39;SMEFT&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-             <span class="n">par_dict</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-             <span class="n">include_likelihoods</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-             <span class="n">exclude_likelihoods</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eft</span><span class="o">=</span><span class="s1">&#39;SMEFT&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+             <span class="n">par_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+             <span class="n">include_likelihoods</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+             <span class="n">exclude_likelihoods</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
              <span class="n">Nexp</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span>
-             <span class="n">exp_cov_folder</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-             <span class="n">sm_cov_folder</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-             <span class="n">custom_likelihoods</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-             <span class="n">fix_ckm</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+             <span class="n">exp_cov_folder</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+             <span class="n">sm_cov_folder</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+             <span class="n">custom_likelihoods</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+             <span class="n">fix_ckm</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
              <span class="n">ckm_scheme</span><span class="o">=</span><span class="s1">&#39;CKMSchemeRmuBtaunuBxlnuDeltaM&#39;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Initialize the likelihood.</span>
 <span class="sd">    Optionally, a dictionary of parameters can be passed as `par_dict`.</span>
@@ -2592,13 +2780,15 @@ from the measurement of four input observables:
     <span class="c1"># take missing parameters from flavio defaults</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">par_dict_default</span> <span class="o">=</span> <span class="n">flavio</span><span class="o">.</span><span class="n">default_parameters</span><span class="o">.</span><span class="n">get_central_all</span><span class="p">()</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">par_dict_default</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">par_dict</span><span class="p">)</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">_par_dict_sm</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_par_dict_sm</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">fix_ckm</span> <span class="o">=</span> <span class="n">fix_ckm</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fix_ckm</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fast_likelihoods_yaml</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fast_likelihoods_yaml_fixckm</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_ckm_scheme</span> <span class="o">=</span> <span class="n">get_ckm_schemes</span><span class="p">()[</span><span class="n">ckm_scheme</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_ckm_scheme_name</span> <span class="o">=</span> <span class="n">ckm_scheme</span>
     <span class="k">except</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;CKM scheme &#39;{}&#39; is not defined.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ckm_scheme</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;CKM scheme &#39;</span><span class="si">{}</span><span class="s2">&#39; is not defined.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ckm_scheme</span><span class="p">))</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">likelihoods</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">fast_likelihoods</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_custom_likelihoods_dict</span> <span class="o">=</span> <span class="n">custom_likelihoods</span> <span class="ow">or</span> <span class="p">{}</span>
@@ -2606,23 +2796,23 @@ from the measurement of four input observables:
     <span class="bp">self</span><span class="o">.</span><span class="n">_load_likelihoods</span><span class="p">(</span><span class="n">include_likelihoods</span><span class="o">=</span><span class="n">include_likelihoods</span><span class="p">,</span>
                            <span class="n">exclude_likelihoods</span><span class="o">=</span><span class="n">exclude_likelihoods</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_Nexp</span> <span class="o">=</span> <span class="n">Nexp</span>
-    <span class="k">if</span> <span class="n">exp_cov_folder</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">exp_cov_folder</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">load_exp_covariances</span><span class="p">(</span><span class="n">exp_cov_folder</span><span class="p">)</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">_sm_cov_loaded</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_sm_cov_loaded</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">sm_cov_folder</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">sm_cov_folder</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">load_sm_covariances</span><span class="p">(</span><span class="n">get_datapath</span><span class="p">(</span><span class="s1">&#39;smelli&#39;</span><span class="p">,</span> <span class="s1">&#39;data/cache&#39;</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">load_sm_covariances</span><span class="p">(</span><span class="n">sm_cov_folder</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_sm_cov_loaded</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sm_cov_loaded</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">make_measurement</span><span class="p">()</span>
     <span class="k">except</span> <span class="p">(</span><span class="ne">KeyboardInterrupt</span><span class="p">,</span> <span class="ne">SystemExit</span><span class="p">):</span>
         <span class="k">raise</span>
     <span class="k">except</span><span class="p">:</span>
         <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;There was a problem loading the SM covariances. &quot;</span>
                       <span class="s2">&quot;Please recompute them with `make_measurement`.&quot;</span><span class="p">)</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">_log_likelihood_sm</span> <span class="o">=</span> <span class="bp">None</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">_obstable_sm</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_log_likelihood_sm</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_obstable_sm</span> <span class="o">=</span> <span class="kc">None</span>
 </pre></div>
 
   </div>
@@ -2643,7 +2833,7 @@ from the measurement of four input observables:
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-smelli.classes.GlobalLikelihood.get_ckm_sm', this);">Show source &equiv;</a></p>
   <div id="source-smelli.classes.GlobalLikelihood.get_ckm_sm" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">get_ckm_sm</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-    <span class="n">Vus</span><span class="p">,</span> <span class="n">Vcb</span><span class="p">,</span> <span class="n">Vub</span><span class="p">,</span> <span class="n">delta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ckm_scheme</span><span class="o">.</span><span class="n">ckm_np</span><span class="p">(</span><span class="n">w</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
+    <span class="n">Vus</span><span class="p">,</span> <span class="n">Vcb</span><span class="p">,</span> <span class="n">Vub</span><span class="p">,</span> <span class="n">delta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ckm_scheme</span><span class="o">.</span><span class="n">ckm_np</span><span class="p">(</span><span class="n">w</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;Vus&#39;</span><span class="p">:</span> <span class="n">Vus</span><span class="p">,</span> <span class="s1">&#39;Vcb&#39;</span><span class="p">:</span> <span class="n">Vcb</span><span class="p">,</span> <span class="s1">&#39;Vub&#39;</span><span class="p">:</span> <span class="n">Vub</span><span class="p">,</span> <span class="s1">&#39;delta&#39;</span><span class="p">:</span> <span class="n">delta</span><span class="p">}</span>
 </pre></div>
 
@@ -2773,7 +2963,7 @@ from nuisance parameters.</p>
         <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;Nexp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Nexp</span>
     <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">flh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fast_likelihoods</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="n">flh</span><span class="o">.</span><span class="n">make_measurement</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">_sm_cov_loaded</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_sm_cov_loaded</span> <span class="o">=</span> <span class="kc">True</span>
 </pre></div>
 
   </div>
@@ -2800,7 +2990,7 @@ of an observable. Thus, the number of observations is always</p>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-smelli.classes.GlobalLikelihood.number_observations_dict', this);">Show source &equiv;</a></p>
   <div id="source-smelli.classes.GlobalLikelihood.number_observations_dict" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">number_observations_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exclude_observables</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">number_observations_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exclude_observables</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Get a dictionary of the number of &quot;observations&quot; for each</span>
 <span class="sd">    sublikelihood.</span>
 <span class="sd">    Here, an &quot;observation&quot; is defined as an individual measurment</span>
@@ -2819,6 +3009,108 @@ of an observable. Thus, the number of observations is always</p>
         <span class="n">nobs_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">clh</span><span class="o">.</span><span class="n">get_number_observations</span><span class="p">()</span>
     <span class="n">nobs_dict</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">nobs_dict</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="s1">&#39;custom_&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">k</span><span class="p">])</span>
     <span class="k">return</span> <span class="n">nobs_dict</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="smelli.classes.GlobalLikelihood.plot_data_2d">
+    <p>def <span class="ident">plot_data_2d</span>(</p><p>self, wc_fct, x_min, x_max, y_min, y_max, scale, steps=20, threads=1)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Compute the likelihood on a grid of two non-zero Wilson coefficients.</p>
+<p>This method is meant for producing contour plots with <code>flavio.plots</code>
+and <code>matplotlib</code> in the plane of two Wilson coefficients.</p>
+<p>Parameters:</p>
+<ul>
+<li><code>wc_fct</code>: function of two parameters x and y returning a dictionary
+            with Wilson coefficients</li>
+<li><code>x_min</code>: minimum value of Wilson coefficient on x axis</li>
+<li><code>x_max</code>: maximum value of Wilson coefficient on x axis</li>
+<li><code>y_min</code>: minimum value of Wilson coefficient on y axis</li>
+<li><code>y_max</code>: maximum value of Wilson coefficient on y axis</li>
+<li><code>scale</code>: either a function of two parameters x and y returning the
+           renormalization scale in GeV, or a numerical value fixing the
+           scale</li>
+<li><code>steps</code>: number of steps in each direction. The computing time scales
+           with the square of this number.</li>
+<li><code>threads</code>: number of threads for parallel computation (default: 1)</li>
+</ul>
+<p>Returns:</p>
+<p>A dictionary of the  form
+<code>{'likelihood_A': dat_A, 'likelihood_B': dat_B, ...}</code>
+where <code>'likelihood_A'</code> etc. are the names of the sub- and custom
+likelihoods (as return by <code>GlobalLikelihoodPoint.log_likelihood_dict</code>)
+and <code>dat_A</code> etc. are dictionaries with the keys <code>x</code>, <code>y</code>, <code>z</code>, that
+can be directly fed to the <code>flavio.plots.contour</code> plot function.</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-smelli.classes.GlobalLikelihood.plot_data_2d', this);">Show source &equiv;</a></p>
+  <div id="source-smelli.classes.GlobalLikelihood.plot_data_2d" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">plot_data_2d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">wc_fct</span><span class="p">,</span>
+                 <span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">,</span> <span class="n">y_min</span><span class="p">,</span> <span class="n">y_max</span><span class="p">,</span>
+                 <span class="n">scale</span><span class="p">,</span>
+                 <span class="n">steps</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+                 <span class="n">threads</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute the likelihood on a grid of two non-zero Wilson coefficients.</span>
+<span class="sd">    This method is meant for producing contour plots with `flavio.plots`</span>
+<span class="sd">    and `matplotlib` in the plane of two Wilson coefficients.</span>
+<span class="sd">    Parameters:</span>
+<span class="sd">    - `wc_fct`: function of two parameters x and y returning a dictionary</span>
+<span class="sd">                with Wilson coefficients</span>
+<span class="sd">    - `x_min`: minimum value of Wilson coefficient on x axis</span>
+<span class="sd">    - `x_max`: maximum value of Wilson coefficient on x axis</span>
+<span class="sd">    - `y_min`: minimum value of Wilson coefficient on y axis</span>
+<span class="sd">    - `y_max`: maximum value of Wilson coefficient on y axis</span>
+<span class="sd">    - `scale`: either a function of two parameters x and y returning the</span>
+<span class="sd">               renormalization scale in GeV, or a numerical value fixing the</span>
+<span class="sd">               scale</span>
+<span class="sd">    - `steps`: number of steps in each direction. The computing time scales</span>
+<span class="sd">               with the square of this number.</span>
+<span class="sd">    - `threads`: number of threads for parallel computation (default: 1)</span>
+<span class="sd">    Returns:</span>
+<span class="sd">    A dictionary of the  form</span>
+<span class="sd">    `{&#39;likelihood_A&#39;: dat_A, &#39;likelihood_B&#39;: dat_B, ...}`</span>
+<span class="sd">    where `&#39;likelihood_A&#39;` etc. are the names of the sub- and custom</span>
+<span class="sd">    likelihoods (as return by `GlobalLikelihoodPoint.log_likelihood_dict`)</span>
+<span class="sd">    and `dat_A` etc. are dictionaries with the keys `x`, `y`, `z`, that</span>
+<span class="sd">    can be directly fed to the `flavio.plots.contour` plot function.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">,</span> <span class="n">steps</span><span class="p">)</span>
+    <span class="n">_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">y_min</span><span class="p">,</span> <span class="n">y_max</span><span class="p">,</span> <span class="n">steps</span><span class="p">)</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">_x</span><span class="p">,</span> <span class="n">_y</span><span class="p">)</span>
+    <span class="n">xy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">steps</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">xy_enumerated</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="n">xy</span><span class="p">))</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">scale</span><span class="p">,</span><span class="n">Number</span><span class="p">):</span>
+        <span class="n">scale_fct</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">_scale_fct_fixed</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">scale_fct</span> <span class="o">=</span> <span class="n">scale</span>
+    <span class="n">ll</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">_log_likelihood_2d</span><span class="p">,</span> <span class="n">gl</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">wc_fct</span><span class="o">=</span><span class="n">wc_fct</span><span class="p">,</span> <span class="n">scale_fct</span><span class="o">=</span><span class="n">scale_fct</span><span class="p">)</span>
+    <span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">Pool</span>
+    <span class="k">if</span> <span class="n">threads</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">pool</span> <span class="o">=</span>  <span class="n">Pool</span><span class="p">(</span><span class="n">threads</span><span class="p">)</span>
+        <span class="n">ll_dict_list_enumerated</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">ll</span><span class="p">,</span> <span class="n">xy_enumerated</span><span class="p">)</span>
+        <span class="n">pool</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">pool</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ll_dict_list_enumerated</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">ll</span><span class="p">,</span> <span class="n">xy_enumerated</span><span class="p">)</span>
+    <span class="n">ll_dict_list</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">ll_dict</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">ll_dict</span> <span class="ow">in</span>
+        <span class="nb">sorted</span><span class="p">(</span><span class="n">ll_dict_list_enumerated</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">itemgetter</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+    <span class="p">]</span>
+    <span class="n">plotdata</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">keys</span> <span class="o">=</span> <span class="n">ll_dict_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>  <span class="c1"># look at first dict to fix keys</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">ll_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">ll_dict</span> <span class="ow">in</span> <span class="n">ll_dict_list</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">steps</span><span class="p">,</span> <span class="n">steps</span><span class="p">))</span>
+        <span class="n">plotdata</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="n">y</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">:</span> <span class="n">z</span><span class="p">}</span>
+    <span class="k">return</span> <span class="n">plotdata</span>
 </pre></div>
 
   </div>
@@ -3026,7 +3318,7 @@ for each individual observable, given the Wilson coefficients</li>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">likelihood</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span>
-                 <span class="n">fix_ckm</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+                 <span class="n">fix_ckm</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Initialize the `GlobalLikelihoodPoint` instance.</span>
 
 <span class="sd">        Parameters:</span>
@@ -3042,14 +3334,14 @@ for each individual observable, given the Wilson coefficients</li>
         <span class="n">likelihood</span><span class="o">.</span><span class="n">_check_sm_cov_loaded</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">w_input</span> <span class="o">=</span> <span class="n">w</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fix_ckm</span> <span class="o">=</span> <span class="n">fix_ckm</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_w</span> <span class="o">=</span> <span class="bp">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_obstable_tree_cache</span> <span class="o">=</span> <span class="bp">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_log_likelihood_dict</span> <span class="o">=</span> <span class="bp">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_par_dict_np</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_w</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_obstable_tree_cache</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_log_likelihood_dict</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_par_dict_np</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">w</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_w</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_w</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">w</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">w_input</span>
             <span class="n">opt</span> <span class="o">=</span> <span class="n">w</span><span class="o">.</span><span class="n">get_option</span><span class="p">(</span><span class="s1">&#39;parameters&#39;</span><span class="p">)</span>
             <span class="n">par</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">par_dict_np</span>
@@ -3081,7 +3373,7 @@ for each individual observable, given the Wilson coefficients</li>
 <span class="sd">        returns the SM values.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fix_ckm</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">par_dict_sm</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_par_dict_np</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_par_dict_np</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">par_dict_np</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">par_dict_default</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
             <span class="n">par_dict_np</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_ckm_np</span><span class="p">())</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_par_dict_np</span> <span class="o">=</span> <span class="n">par_dict_np</span>
@@ -3100,7 +3392,7 @@ for each individual observable, given the Wilson coefficients</li>
 <span class="sd">        for the individual contributions.</span>
 
 <span class="sd">        Cached after the first call.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_log_likelihood_dict</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_log_likelihood_dict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_log_likelihood_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_delta_log_likelihood</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_log_likelihood_dict</span>
 
@@ -3165,8 +3457,8 @@ for each individual observable, given the Wilson coefficients</li>
             <span class="bp">self</span><span class="o">.</span><span class="n">_obstable_tree_cache</span> <span class="o">=</span> <span class="n">info</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obstable_tree_cache</span>
 
-    <span class="k">def</span> <span class="nf">obstable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_pull_exp</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">sort_by</span><span class="o">=</span><span class="s1">&#39;pull exp.&#39;</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                 <span class="n">min_val</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">max_val</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">obstable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_pull_exp</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">sort_by</span><span class="o">=</span><span class="s1">&#39;pull exp.&#39;</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">min_val</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_val</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Return a pandas data frame with the central values and uncertainties</span>
 <span class="sd">        as well as the pulls with respect to the experimental and the SM values for each observable.</span>
 
@@ -3178,25 +3470,25 @@ for each individual observable, given the Wilson coefficients</li>
                      <span class="s1">&#39;th. unc.&#39;</span><span class="p">,</span> <span class="s1">&#39;theory&#39;</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">sort_by</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sort_keys</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;&#39;{}&#39; is not an allowed value for sort_by. Allowed values are &quot;</span>
-                <span class="s2">&quot;&#39;{}&#39;, and &#39;{}&#39;.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sort_by</span><span class="p">,</span> <span class="s2">&quot;&#39;, &#39;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">sort_keys</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span>
+                <span class="s2">&quot;&#39;</span><span class="si">{}</span><span class="s2">&#39; is not an allowed value for sort_by. Allowed values are &quot;</span>
+                <span class="s2">&quot;&#39;</span><span class="si">{}</span><span class="s2">&#39;, and &#39;</span><span class="si">{}</span><span class="s2">&#39;.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sort_by</span><span class="p">,</span> <span class="s2">&quot;&#39;, &#39;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">sort_keys</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span>
                                          <span class="n">sort_keys</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
             <span class="p">)</span>
         <span class="n">info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obstable_tree</span>
-        <span class="n">subset</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="n">subset</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">sort_by</span> <span class="o">==</span> <span class="s1">&#39;pull exp.&#39;</span><span class="p">:</span>
             <span class="c1"># if sorted by pull exp., use descending order as default</span>
-            <span class="k">if</span> <span class="n">ascending</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-                <span class="n">ascending</span> <span class="o">=</span> <span class="bp">False</span>
-            <span class="k">if</span> <span class="n">min_val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">ascending</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">ascending</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="n">min_val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">min_val</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">min_pull_exp</span><span class="p">,</span> <span class="n">min_val</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">min_val</span> <span class="o">=</span> <span class="n">min_pull_exp</span>
         <span class="k">elif</span> <span class="n">min_pull_exp</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">subset</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;pull exp.&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">min_pull_exp</span>
         <span class="c1"># if sorted not by pull exp., use ascending order as default</span>
-        <span class="k">if</span> <span class="n">ascending</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="n">ascending</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">if</span> <span class="n">ascending</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ascending</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="n">info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obstable_filter_sort</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">sortkey</span><span class="o">=</span><span class="n">sort_by</span><span class="p">,</span>
                                           <span class="n">ascending</span><span class="o">=</span><span class="n">ascending</span><span class="p">,</span>
                                           <span class="n">min_val</span><span class="o">=</span><span class="n">min_val</span><span class="p">,</span> <span class="n">max_val</span><span class="o">=</span><span class="n">max_val</span><span class="p">,</span>
@@ -3217,24 +3509,24 @@ for each individual observable, given the Wilson coefficients</li>
         <span class="k">return</span> <span class="n">df</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_obstable_filter_sort</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">sortkey</span><span class="o">=</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-                              <span class="n">min_val</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">max_val</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                              <span class="n">subset</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">max_rows</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_obstable_filter_sort</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">sortkey</span><span class="o">=</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                              <span class="n">min_val</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_val</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                              <span class="n">subset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_rows</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="c1"># impose min_val and max_val</span>
-        <span class="k">if</span> <span class="n">min_val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">min_val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">info</span> <span class="o">=</span> <span class="p">{</span><span class="n">obs</span><span class="p">:</span><span class="n">row</span> <span class="k">for</span> <span class="n">obs</span><span class="p">,</span><span class="n">row</span> <span class="ow">in</span> <span class="n">info</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
                     <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="n">sortkey</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">min_val</span><span class="p">}</span>
-        <span class="k">if</span> <span class="n">max_val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">max_val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">info</span> <span class="o">=</span> <span class="p">{</span><span class="n">obs</span><span class="p">:</span><span class="n">row</span> <span class="k">for</span> <span class="n">obs</span><span class="p">,</span><span class="n">row</span> <span class="ow">in</span> <span class="n">info</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
                     <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="n">sortkey</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">max_val</span><span class="p">}</span>
         <span class="c1"># get only subset:</span>
-        <span class="k">if</span> <span class="n">subset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">subset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">info</span> <span class="o">=</span> <span class="p">{</span><span class="n">obs</span><span class="p">:</span><span class="n">row</span> <span class="k">for</span> <span class="n">obs</span><span class="p">,</span><span class="n">row</span> <span class="ow">in</span> <span class="n">info</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">subset</span><span class="p">(</span><span class="n">row</span><span class="p">)}</span>
         <span class="c1"># sort</span>
         <span class="n">info</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">info</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">sortkey</span><span class="p">],</span>
                                   <span class="n">reverse</span><span class="o">=</span><span class="p">(</span><span class="ow">not</span> <span class="n">ascending</span><span class="p">)))</span>
         <span class="c1"># restrict number of rows per tabular to max_rows</span>
-        <span class="k">if</span> <span class="n">max_rows</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">info</span><span class="p">)</span><span class="o">&lt;=</span><span class="n">max_rows</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">max_rows</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">info</span><span class="p">)</span><span class="o">&lt;=</span><span class="n">max_rows</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">info</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">info_list</span> <span class="o">=</span> <span class="p">[]</span>
@@ -3279,7 +3571,7 @@ for each individual observable, given the Wilson coefficients</li>
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-smelli.classes.GlobalLikelihoodPoint.__init__', this);">Show source &equiv;</a></p>
   <div id="source-smelli.classes.GlobalLikelihoodPoint.__init__" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">likelihood</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span>
-             <span class="n">fix_ckm</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+             <span class="n">fix_ckm</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Initialize the `GlobalLikelihoodPoint` instance.</span>
 <span class="sd">    Parameters:</span>
 <span class="sd">    - likelihood: an instance of `GlobalLikelihood`</span>
@@ -3294,10 +3586,10 @@ for each individual observable, given the Wilson coefficients</li>
     <span class="n">likelihood</span><span class="o">.</span><span class="n">_check_sm_cov_loaded</span><span class="p">()</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">w_input</span> <span class="o">=</span> <span class="n">w</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">fix_ckm</span> <span class="o">=</span> <span class="n">fix_ckm</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">_w</span> <span class="o">=</span> <span class="bp">None</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">_obstable_tree_cache</span> <span class="o">=</span> <span class="bp">None</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">_log_likelihood_dict</span> <span class="o">=</span> <span class="bp">None</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">_par_dict_np</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_w</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_obstable_tree_cache</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_log_likelihood_dict</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_par_dict_np</span> <span class="o">=</span> <span class="kc">None</span>
 </pre></div>
 
   </div>
@@ -3386,7 +3678,7 @@ for the individual contributions.</p>
     <span class="sd">&quot;&quot;&quot;Return a dictionary with the delta log likelihood values</span>
 <span class="sd">    for the individual contributions.</span>
 <span class="sd">    Cached after the first call.&quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_log_likelihood_dict</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_log_likelihood_dict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_log_likelihood_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_delta_log_likelihood</span><span class="p">()</span>
     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_log_likelihood_dict</span>
 </pre></div>
@@ -3440,8 +3732,8 @@ due to correlations.</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-smelli.classes.GlobalLikelihoodPoint.obstable', this);">Show source &equiv;</a></p>
   <div id="source-smelli.classes.GlobalLikelihoodPoint.obstable" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">obstable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_pull_exp</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">sort_by</span><span class="o">=</span><span class="s1">&#39;pull exp.&#39;</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-             <span class="n">min_val</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">max_val</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">obstable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_pull_exp</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">sort_by</span><span class="o">=</span><span class="s1">&#39;pull exp.&#39;</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+             <span class="n">min_val</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_val</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Return a pandas data frame with the central values and uncertainties</span>
 <span class="sd">    as well as the pulls with respect to the experimental and the SM values for each observable.</span>
 <span class="sd">    The pull is defined is $\sqrt(|-2\ln L|)$. Note that the global</span>
@@ -3452,25 +3744,25 @@ due to correlations.</p></div>
                  <span class="s1">&#39;th. unc.&#39;</span><span class="p">,</span> <span class="s1">&#39;theory&#39;</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">sort_by</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sort_keys</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="s2">&quot;&#39;{}&#39; is not an allowed value for sort_by. Allowed values are &quot;</span>
-            <span class="s2">&quot;&#39;{}&#39;, and &#39;{}&#39;.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sort_by</span><span class="p">,</span> <span class="s2">&quot;&#39;, &#39;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">sort_keys</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span>
+            <span class="s2">&quot;&#39;</span><span class="si">{}</span><span class="s2">&#39; is not an allowed value for sort_by. Allowed values are &quot;</span>
+            <span class="s2">&quot;&#39;</span><span class="si">{}</span><span class="s2">&#39;, and &#39;</span><span class="si">{}</span><span class="s2">&#39;.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sort_by</span><span class="p">,</span> <span class="s2">&quot;&#39;, &#39;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">sort_keys</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span>
                                      <span class="n">sort_keys</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
         <span class="p">)</span>
     <span class="n">info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obstable_tree</span>
-    <span class="n">subset</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">subset</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">if</span> <span class="n">sort_by</span> <span class="o">==</span> <span class="s1">&#39;pull exp.&#39;</span><span class="p">:</span>
         <span class="c1"># if sorted by pull exp., use descending order as default</span>
-        <span class="k">if</span> <span class="n">ascending</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="n">ascending</span> <span class="o">=</span> <span class="bp">False</span>
-        <span class="k">if</span> <span class="n">min_val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">ascending</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ascending</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">min_val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">min_val</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">min_pull_exp</span><span class="p">,</span> <span class="n">min_val</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">min_val</span> <span class="o">=</span> <span class="n">min_pull_exp</span>
     <span class="k">elif</span> <span class="n">min_pull_exp</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">subset</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;pull exp.&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">min_pull_exp</span>
     <span class="c1"># if sorted not by pull exp., use ascending order as default</span>
-    <span class="k">if</span> <span class="n">ascending</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">ascending</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="k">if</span> <span class="n">ascending</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ascending</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obstable_filter_sort</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">sortkey</span><span class="o">=</span><span class="n">sort_by</span><span class="p">,</span>
                                       <span class="n">ascending</span><span class="o">=</span><span class="n">ascending</span><span class="p">,</span>
                                       <span class="n">min_val</span><span class="o">=</span><span class="n">min_val</span><span class="p">,</span> <span class="n">max_val</span><span class="o">=</span><span class="n">max_val</span><span class="p">,</span>
