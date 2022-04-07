@@ -1160,7 +1160,7 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding: 0 5px
 
 <span class="k">class</span> <span class="nc">TestPackage</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">test_flavio</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">smelli</span><span class="o">.</span><span class="n">_check_flavio_version</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">smelli</span><span class="o">.</span><span class="n">_flavio_up_to_date</span><span class="p">)</span>
 </pre></div>
 
   </div>
@@ -1206,7 +1206,7 @@ in order to be run.</p>
   <div id="source-smelli.test_package.TestPackage" class="source">
     <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">TestPackage</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">test_flavio</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">smelli</span><span class="o">.</span><span class="n">_check_flavio_version</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">smelli</span><span class="o">.</span><span class="n">_flavio_up_to_date</span><span class="p">)</span>
 </pre></div>
 
   </div>
@@ -3436,7 +3436,7 @@ block, allowing further test code to be executed.</p></div>
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-smelli.test_package.TestPackage.test_flavio', this);">Show source &equiv;</a></p>
   <div id="source-smelli.test_package.TestPackage.test_flavio" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">test_flavio</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">smelli</span><span class="o">.</span><span class="n">_check_flavio_version</span><span class="p">())</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">smelli</span><span class="o">.</span><span class="n">_flavio_up_to_date</span><span class="p">)</span>
 </pre></div>
 
   </div>

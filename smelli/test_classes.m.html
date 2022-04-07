@@ -1128,6 +1128,8 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding: 0 5px
     <li class="mono"><a href="#smelli.test_classes.TestGlobalLikelihood.subTest">subTest</a></li>
     <li class="mono"><a href="#smelli.test_classes.TestGlobalLikelihood.tearDown">tearDown</a></li>
     <li class="mono"><a href="#smelli.test_classes.TestGlobalLikelihood.test_basis">test_basis</a></li>
+    <li class="mono"><a href="#smelli.test_classes.TestGlobalLikelihood.test_chi2_min">test_chi2_min</a></li>
+    <li class="mono"><a href="#smelli.test_classes.TestGlobalLikelihood.test_custom_likelihoods">test_custom_likelihoods</a></li>
     <li class="mono"><a href="#smelli.test_classes.TestGlobalLikelihood.test_dispatch">test_dispatch</a></li>
     <li class="mono"><a href="#smelli.test_classes.TestGlobalLikelihood.test_incl_excl">test_incl_excl</a></li>
     <li class="mono"><a href="#smelli.test_classes.TestGlobalLikelihood.test_init">test_init</a></li>
@@ -1281,18 +1283,147 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding: 0 5px
         <span class="n">ll_np</span> <span class="o">=</span> <span class="n">gl</span><span class="o">.</span><span class="n">parameter_point</span><span class="p">({</span><span class="s1">&#39;C9_bsmumu&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">},</span> <span class="mf">4.8</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">test_incl_excl</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">gl</span> <span class="o">=</span> <span class="n">GlobalLikelihood</span><span class="p">(</span><span class="n">eft</span><span class="o">=</span><span class="s1">&#39;WET&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;flavio&#39;</span><span class="p">,</span> <span class="n">include_likelihoods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;fast_likelihood_quarks.yaml&#39;</span><span class="p">])</span>
+        <span class="n">gl</span> <span class="o">=</span> <span class="n">GlobalLikelihood</span><span class="p">(</span>
+            <span class="n">eft</span><span class="o">=</span><span class="s1">&#39;WET&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;flavio&#39;</span><span class="p">,</span>
+            <span class="n">include_likelihoods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;fast_likelihood_quarks.yaml&#39;</span><span class="p">])</span>
         <span class="n">ll</span> <span class="o">=</span> <span class="n">gl</span><span class="o">.</span><span class="n">parameter_point</span><span class="p">({},</span> <span class="mi">100</span><span class="p">)</span><span class="o">.</span><span class="n">log_likelihood_dict</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">assertSetEqual</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">ll</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span> <span class="p">{</span><span class="s1">&#39;fast_likelihood_quarks.yaml&#39;</span><span class="p">,</span> <span class="s1">&#39;global&#39;</span><span class="p">})</span>
-        <span class="n">gl</span> <span class="o">=</span> <span class="n">GlobalLikelihood</span><span class="p">(</span><span class="n">eft</span><span class="o">=</span><span class="s1">&#39;WET&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;flavio&#39;</span><span class="p">,</span> <span class="n">include_likelihoods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;likelihood_lfv.yaml&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertSetEqual</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">ll</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span>
+                            <span class="p">{</span><span class="s1">&#39;fast_likelihood_quarks.yaml&#39;</span><span class="p">,</span> <span class="s1">&#39;global&#39;</span><span class="p">})</span>
+        <span class="n">gl</span> <span class="o">=</span> <span class="n">GlobalLikelihood</span><span class="p">(</span><span class="n">eft</span><span class="o">=</span><span class="s1">&#39;WET&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;flavio&#39;</span><span class="p">,</span>
+                              <span class="n">include_likelihoods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;likelihood_lfv.yaml&#39;</span><span class="p">])</span>
         <span class="n">ll</span> <span class="o">=</span> <span class="n">gl</span><span class="o">.</span><span class="n">parameter_point</span><span class="p">({},</span> <span class="mi">100</span><span class="p">)</span><span class="o">.</span><span class="n">log_likelihood_dict</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assertSetEqual</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">ll</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span> <span class="p">{</span><span class="s1">&#39;likelihood_lfv.yaml&#39;</span><span class="p">,</span> <span class="s1">&#39;global&#39;</span><span class="p">})</span>
-        <span class="n">gl</span> <span class="o">=</span> <span class="n">GlobalLikelihood</span><span class="p">(</span><span class="n">eft</span><span class="o">=</span><span class="s1">&#39;WET&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;flavio&#39;</span><span class="p">,</span> <span class="n">exclude_likelihoods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;likelihood_lfv.yaml&#39;</span><span class="p">])</span>
+        <span class="n">gl</span> <span class="o">=</span> <span class="n">GlobalLikelihood</span><span class="p">(</span><span class="n">eft</span><span class="o">=</span><span class="s1">&#39;WET&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;flavio&#39;</span><span class="p">,</span>
+                              <span class="n">exclude_likelihoods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;likelihood_lfv.yaml&#39;</span><span class="p">])</span>
         <span class="n">ll</span> <span class="o">=</span> <span class="n">gl</span><span class="o">.</span><span class="n">parameter_point</span><span class="p">({},</span> <span class="mi">100</span><span class="p">)</span><span class="o">.</span><span class="n">log_likelihood_dict</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assertNotIn</span><span class="p">(</span><span class="s1">&#39;likelihood_lfv.yaml&#39;</span><span class="p">,</span> <span class="nb">set</span><span class="p">(</span><span class="n">ll</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">GlobalLikelihood</span><span class="p">,</span> <span class="n">include_likelihoods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;nonexistent_likelihood.yaml&quot;</span><span class="p">])</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">GlobalLikelihood</span><span class="p">,</span> <span class="n">exclude_likelihoods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;nonexistent_likelihood.yaml&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">GlobalLikelihood</span><span class="p">,</span>
+                          <span class="n">include_likelihoods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;nonexistent_likelihood.yaml&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">GlobalLikelihood</span><span class="p">,</span>
+                          <span class="n">exclude_likelihoods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;nonexistent_likelihood.yaml&quot;</span><span class="p">])</span>
 
+    <span class="k">def</span> <span class="nf">test_chi2_min</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">gl_ewpt</span> <span class="o">=</span> <span class="n">GlobalLikelihood</span><span class="p">(</span><span class="n">fix_ckm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">include_likelihoods</span><span class="o">=</span><span class="p">[</span>
+            <span class="s1">&#39;likelihood_ewpt.yaml&#39;</span><span class="p">,</span>
+        <span class="p">])</span>
+        <span class="k">def</span> <span class="nf">wc_fct_2D_2args</span><span class="p">(</span><span class="n">S</span><span class="p">,</span><span class="n">T</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s1">&#39;phiWB&#39;</span><span class="p">:</span> <span class="n">S</span> <span class="o">*</span> <span class="mf">7.643950529889027e-08</span><span class="p">,</span>
+                <span class="s1">&#39;phiD&#39;</span><span class="p">:</span> <span class="o">-</span><span class="n">T</span> <span class="o">*</span> <span class="mf">2.5793722852276787e-07</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="k">def</span> <span class="nf">wc_fct_2D_1arg</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+            <span class="n">S</span><span class="p">,</span><span class="n">T</span> <span class="o">=</span> <span class="n">x</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s1">&#39;phiWB&#39;</span><span class="p">:</span> <span class="n">S</span> <span class="o">*</span> <span class="mf">7.643950529889027e-08</span><span class="p">,</span>
+                <span class="s1">&#39;phiD&#39;</span><span class="p">:</span> <span class="o">-</span><span class="n">T</span> <span class="o">*</span> <span class="mf">2.5793722852276787e-07</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="k">def</span> <span class="nf">wc_fct_1D</span><span class="p">(</span><span class="n">S</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s1">&#39;phiWB&#39;</span><span class="p">:</span> <span class="n">S</span> <span class="o">*</span> <span class="mf">7.643950529889027e-08</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="n">min_data_2D_2args</span> <span class="o">=</span> <span class="n">gl_ewpt</span><span class="o">.</span><span class="n">chi2_min</span><span class="p">(</span>
+            <span class="n">wc_fct_2D_2args</span><span class="p">,</span>
+            <span class="mf">91.1876</span>
+        <span class="p">)</span>
+        <span class="n">min_data_2D_1arg</span> <span class="o">=</span> <span class="n">gl_ewpt</span><span class="o">.</span><span class="n">chi2_min</span><span class="p">(</span>
+            <span class="n">wc_fct_2D_1arg</span><span class="p">,</span>
+            <span class="mf">91.1876</span><span class="p">,</span>
+            <span class="n">n</span><span class="o">=</span><span class="mi">2</span>
+        <span class="p">)</span>
+        <span class="n">min_data_1D</span> <span class="o">=</span> <span class="n">gl_ewpt</span><span class="o">.</span><span class="n">chi2_min</span><span class="p">(</span>
+            <span class="n">wc_fct_1D</span><span class="p">,</span>
+            <span class="mf">91.1876</span><span class="p">,</span>
+            <span class="n">n</span><span class="o">=</span><span class="mi">1</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">min_data_1D</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">][</span><span class="s1">&#39;coords_min&#39;</span><span class="p">]),</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">min_data_2D_2args</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">][</span><span class="s1">&#39;coords_min&#39;</span><span class="p">]),</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">min_data_1D</span><span class="p">[</span><span class="s1">&#39;likelihood_ewpt.yaml&#39;</span><span class="p">][</span><span class="s1">&#39;coords_min&#39;</span><span class="p">]),</span>
+            <span class="mi">1</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">min_data_2D_2args</span><span class="p">[</span><span class="s1">&#39;likelihood_ewpt.yaml&#39;</span><span class="p">][</span><span class="s1">&#39;coords_min&#39;</span><span class="p">]),</span>
+            <span class="mi">2</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+            <span class="n">min_data_2D_2args</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">][</span><span class="s1">&#39;z_min&#39;</span><span class="p">],</span>
+            <span class="n">min_data_2D_1arg</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">][</span><span class="s1">&#39;z_min&#39;</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">all</span><span class="p">(</span>
+            <span class="n">min_data_2D_2args</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">][</span><span class="s1">&#39;coords_min&#39;</span><span class="p">]</span>
+            <span class="o">==</span>
+            <span class="n">min_data_2D_1arg</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">][</span><span class="s1">&#39;coords_min&#39;</span><span class="p">]</span>
+        <span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+            <span class="n">min_data_2D_2args</span><span class="p">[</span><span class="s1">&#39;likelihood_ewpt.yaml&#39;</span><span class="p">][</span><span class="s1">&#39;z_min&#39;</span><span class="p">],</span>
+            <span class="n">min_data_2D_1arg</span><span class="p">[</span><span class="s1">&#39;likelihood_ewpt.yaml&#39;</span><span class="p">][</span><span class="s1">&#39;z_min&#39;</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">all</span><span class="p">(</span>
+            <span class="n">min_data_2D_2args</span><span class="p">[</span><span class="s1">&#39;likelihood_ewpt.yaml&#39;</span><span class="p">][</span><span class="s1">&#39;coords_min&#39;</span><span class="p">]</span>
+            <span class="o">==</span>
+            <span class="n">min_data_2D_1arg</span><span class="p">[</span><span class="s1">&#39;likelihood_ewpt.yaml&#39;</span><span class="p">][</span><span class="s1">&#39;coords_min&#39;</span><span class="p">]</span>
+        <span class="p">))</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertWarns</span><span class="p">(</span><span class="ne">UserWarning</span><span class="p">):</span>
+            <span class="n">gl_ewpt</span><span class="o">.</span><span class="n">chi2_min</span><span class="p">(</span>
+                <span class="n">wc_fct_2D_2args</span><span class="p">,</span>
+                <span class="mf">91.1876</span><span class="p">,</span>
+                <span class="n">n</span><span class="o">=</span><span class="mi">2</span>
+            <span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+            <span class="n">gl_ewpt</span><span class="o">.</span><span class="n">chi2_min</span><span class="p">(</span>
+                <span class="n">wc_fct_1D</span><span class="p">,</span>
+                <span class="mf">91.1876</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+            <span class="n">gl_ewpt</span><span class="o">.</span><span class="n">chi2_min</span><span class="p">(</span>
+                <span class="n">wc_fct_2D_1arg</span><span class="p">,</span>
+                <span class="mf">91.1876</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="c1"># define a global function for multiprocessing</span>
+        <span class="k">global</span> <span class="n">_wc_fct_2D_2args</span>
+        <span class="k">def</span> <span class="nf">_wc_fct_2D_2args</span><span class="p">(</span><span class="n">S</span><span class="p">,</span><span class="n">T</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s1">&#39;phiWB&#39;</span><span class="p">:</span> <span class="n">S</span> <span class="o">*</span> <span class="mf">7.643950529889027e-08</span><span class="p">,</span>
+                <span class="s1">&#39;phiD&#39;</span><span class="p">:</span> <span class="o">-</span><span class="n">T</span> <span class="o">*</span> <span class="mf">2.5793722852276787e-07</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="n">min_data_2D_2threads</span> <span class="o">=</span> <span class="n">gl_ewpt</span><span class="o">.</span><span class="n">chi2_min</span><span class="p">(</span>
+            <span class="n">_wc_fct_2D_2args</span><span class="p">,</span>
+            <span class="mf">91.1876</span><span class="p">,</span>
+            <span class="n">threads</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">min_data_2D_2threads</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">][</span><span class="s1">&#39;coords_min&#39;</span><span class="p">]),</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">min_data_2D_2threads</span><span class="p">[</span><span class="s1">&#39;likelihood_ewpt.yaml&#39;</span><span class="p">][</span><span class="s1">&#39;coords_min&#39;</span><span class="p">]),</span>
+            <span class="mi">2</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+            <span class="n">min_data_2D_2threads</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">][</span><span class="s1">&#39;z_min&#39;</span><span class="p">],</span>
+            <span class="n">min_data_2D_2args</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">][</span><span class="s1">&#39;z_min&#39;</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+            <span class="n">min_data_2D_2threads</span><span class="p">[</span><span class="s1">&#39;likelihood_ewpt.yaml&#39;</span><span class="p">][</span><span class="s1">&#39;z_min&#39;</span><span class="p">],</span>
+            <span class="n">min_data_2D_2args</span><span class="p">[</span><span class="s1">&#39;likelihood_ewpt.yaml&#39;</span><span class="p">][</span><span class="s1">&#39;z_min&#39;</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">all</span><span class="p">(</span>
+            <span class="n">min_data_2D_2threads</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">][</span><span class="s1">&#39;coords_min&#39;</span><span class="p">]</span>
+            <span class="o">==</span>
+            <span class="n">min_data_2D_2args</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">][</span><span class="s1">&#39;coords_min&#39;</span><span class="p">]</span>
+        <span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">all</span><span class="p">(</span>
+            <span class="n">min_data_2D_2threads</span><span class="p">[</span><span class="s1">&#39;likelihood_ewpt.yaml&#39;</span><span class="p">][</span><span class="s1">&#39;coords_min&#39;</span><span class="p">]</span>
+            <span class="o">==</span>
+            <span class="n">min_data_2D_2args</span><span class="p">[</span><span class="s1">&#39;likelihood_ewpt.yaml&#39;</span><span class="p">][</span><span class="s1">&#39;coords_min&#39;</span><span class="p">]</span>
+        <span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">test_custom_likelihoods</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">GlobalLikelihood</span><span class="p">,</span>
+                          <span class="n">custom_likelihoods</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;with_typo&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;deltaMs&quot;</span><span class="p">]})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">GlobalLikelihood</span><span class="p">,</span>
+                          <span class="n">include_likelihoods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;likelihood_ewpt.yaml&quot;</span><span class="p">],</span>
+                          <span class="n">custom_likelihoods</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;not_included&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;DeltaM_s&quot;</span><span class="p">]})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">GlobalLikelihood</span><span class="p">,</span>
+                          <span class="n">exclude_likelihoods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;likelihood_ewpt.yaml&quot;</span><span class="p">],</span>
+                          <span class="n">custom_likelihoods</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;excluded&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;m_W&quot;</span><span class="p">]})</span>
 
 <span class="k">class</span> <span class="nc">TestGlobalLikelihoodPoint</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
 
@@ -1393,17 +1524,147 @@ in order to be run.</p>
         <span class="n">ll_np</span> <span class="o">=</span> <span class="n">gl</span><span class="o">.</span><span class="n">parameter_point</span><span class="p">({</span><span class="s1">&#39;C9_bsmumu&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">},</span> <span class="mf">4.8</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">test_incl_excl</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">gl</span> <span class="o">=</span> <span class="n">GlobalLikelihood</span><span class="p">(</span><span class="n">eft</span><span class="o">=</span><span class="s1">&#39;WET&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;flavio&#39;</span><span class="p">,</span> <span class="n">include_likelihoods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;fast_likelihood_quarks.yaml&#39;</span><span class="p">])</span>
+        <span class="n">gl</span> <span class="o">=</span> <span class="n">GlobalLikelihood</span><span class="p">(</span>
+            <span class="n">eft</span><span class="o">=</span><span class="s1">&#39;WET&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;flavio&#39;</span><span class="p">,</span>
+            <span class="n">include_likelihoods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;fast_likelihood_quarks.yaml&#39;</span><span class="p">])</span>
         <span class="n">ll</span> <span class="o">=</span> <span class="n">gl</span><span class="o">.</span><span class="n">parameter_point</span><span class="p">({},</span> <span class="mi">100</span><span class="p">)</span><span class="o">.</span><span class="n">log_likelihood_dict</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">assertSetEqual</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">ll</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span> <span class="p">{</span><span class="s1">&#39;fast_likelihood_quarks.yaml&#39;</span><span class="p">,</span> <span class="s1">&#39;global&#39;</span><span class="p">})</span>
-        <span class="n">gl</span> <span class="o">=</span> <span class="n">GlobalLikelihood</span><span class="p">(</span><span class="n">eft</span><span class="o">=</span><span class="s1">&#39;WET&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;flavio&#39;</span><span class="p">,</span> <span class="n">include_likelihoods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;likelihood_lfv.yaml&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertSetEqual</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">ll</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span>
+                            <span class="p">{</span><span class="s1">&#39;fast_likelihood_quarks.yaml&#39;</span><span class="p">,</span> <span class="s1">&#39;global&#39;</span><span class="p">})</span>
+        <span class="n">gl</span> <span class="o">=</span> <span class="n">GlobalLikelihood</span><span class="p">(</span><span class="n">eft</span><span class="o">=</span><span class="s1">&#39;WET&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;flavio&#39;</span><span class="p">,</span>
+                              <span class="n">include_likelihoods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;likelihood_lfv.yaml&#39;</span><span class="p">])</span>
         <span class="n">ll</span> <span class="o">=</span> <span class="n">gl</span><span class="o">.</span><span class="n">parameter_point</span><span class="p">({},</span> <span class="mi">100</span><span class="p">)</span><span class="o">.</span><span class="n">log_likelihood_dict</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assertSetEqual</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">ll</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span> <span class="p">{</span><span class="s1">&#39;likelihood_lfv.yaml&#39;</span><span class="p">,</span> <span class="s1">&#39;global&#39;</span><span class="p">})</span>
-        <span class="n">gl</span> <span class="o">=</span> <span class="n">GlobalLikelihood</span><span class="p">(</span><span class="n">eft</span><span class="o">=</span><span class="s1">&#39;WET&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;flavio&#39;</span><span class="p">,</span> <span class="n">exclude_likelihoods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;likelihood_lfv.yaml&#39;</span><span class="p">])</span>
+        <span class="n">gl</span> <span class="o">=</span> <span class="n">GlobalLikelihood</span><span class="p">(</span><span class="n">eft</span><span class="o">=</span><span class="s1">&#39;WET&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;flavio&#39;</span><span class="p">,</span>
+                              <span class="n">exclude_likelihoods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;likelihood_lfv.yaml&#39;</span><span class="p">])</span>
         <span class="n">ll</span> <span class="o">=</span> <span class="n">gl</span><span class="o">.</span><span class="n">parameter_point</span><span class="p">({},</span> <span class="mi">100</span><span class="p">)</span><span class="o">.</span><span class="n">log_likelihood_dict</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assertNotIn</span><span class="p">(</span><span class="s1">&#39;likelihood_lfv.yaml&#39;</span><span class="p">,</span> <span class="nb">set</span><span class="p">(</span><span class="n">ll</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">GlobalLikelihood</span><span class="p">,</span> <span class="n">include_likelihoods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;nonexistent_likelihood.yaml&quot;</span><span class="p">])</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">GlobalLikelihood</span><span class="p">,</span> <span class="n">exclude_likelihoods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;nonexistent_likelihood.yaml&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">GlobalLikelihood</span><span class="p">,</span>
+                          <span class="n">include_likelihoods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;nonexistent_likelihood.yaml&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">GlobalLikelihood</span><span class="p">,</span>
+                          <span class="n">exclude_likelihoods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;nonexistent_likelihood.yaml&quot;</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">test_chi2_min</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">gl_ewpt</span> <span class="o">=</span> <span class="n">GlobalLikelihood</span><span class="p">(</span><span class="n">fix_ckm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">include_likelihoods</span><span class="o">=</span><span class="p">[</span>
+            <span class="s1">&#39;likelihood_ewpt.yaml&#39;</span><span class="p">,</span>
+        <span class="p">])</span>
+        <span class="k">def</span> <span class="nf">wc_fct_2D_2args</span><span class="p">(</span><span class="n">S</span><span class="p">,</span><span class="n">T</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s1">&#39;phiWB&#39;</span><span class="p">:</span> <span class="n">S</span> <span class="o">*</span> <span class="mf">7.643950529889027e-08</span><span class="p">,</span>
+                <span class="s1">&#39;phiD&#39;</span><span class="p">:</span> <span class="o">-</span><span class="n">T</span> <span class="o">*</span> <span class="mf">2.5793722852276787e-07</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="k">def</span> <span class="nf">wc_fct_2D_1arg</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+            <span class="n">S</span><span class="p">,</span><span class="n">T</span> <span class="o">=</span> <span class="n">x</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s1">&#39;phiWB&#39;</span><span class="p">:</span> <span class="n">S</span> <span class="o">*</span> <span class="mf">7.643950529889027e-08</span><span class="p">,</span>
+                <span class="s1">&#39;phiD&#39;</span><span class="p">:</span> <span class="o">-</span><span class="n">T</span> <span class="o">*</span> <span class="mf">2.5793722852276787e-07</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="k">def</span> <span class="nf">wc_fct_1D</span><span class="p">(</span><span class="n">S</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s1">&#39;phiWB&#39;</span><span class="p">:</span> <span class="n">S</span> <span class="o">*</span> <span class="mf">7.643950529889027e-08</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="n">min_data_2D_2args</span> <span class="o">=</span> <span class="n">gl_ewpt</span><span class="o">.</span><span class="n">chi2_min</span><span class="p">(</span>
+            <span class="n">wc_fct_2D_2args</span><span class="p">,</span>
+            <span class="mf">91.1876</span>
+        <span class="p">)</span>
+        <span class="n">min_data_2D_1arg</span> <span class="o">=</span> <span class="n">gl_ewpt</span><span class="o">.</span><span class="n">chi2_min</span><span class="p">(</span>
+            <span class="n">wc_fct_2D_1arg</span><span class="p">,</span>
+            <span class="mf">91.1876</span><span class="p">,</span>
+            <span class="n">n</span><span class="o">=</span><span class="mi">2</span>
+        <span class="p">)</span>
+        <span class="n">min_data_1D</span> <span class="o">=</span> <span class="n">gl_ewpt</span><span class="o">.</span><span class="n">chi2_min</span><span class="p">(</span>
+            <span class="n">wc_fct_1D</span><span class="p">,</span>
+            <span class="mf">91.1876</span><span class="p">,</span>
+            <span class="n">n</span><span class="o">=</span><span class="mi">1</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">min_data_1D</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">][</span><span class="s1">&#39;coords_min&#39;</span><span class="p">]),</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">min_data_2D_2args</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">][</span><span class="s1">&#39;coords_min&#39;</span><span class="p">]),</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">min_data_1D</span><span class="p">[</span><span class="s1">&#39;likelihood_ewpt.yaml&#39;</span><span class="p">][</span><span class="s1">&#39;coords_min&#39;</span><span class="p">]),</span>
+            <span class="mi">1</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">min_data_2D_2args</span><span class="p">[</span><span class="s1">&#39;likelihood_ewpt.yaml&#39;</span><span class="p">][</span><span class="s1">&#39;coords_min&#39;</span><span class="p">]),</span>
+            <span class="mi">2</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+            <span class="n">min_data_2D_2args</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">][</span><span class="s1">&#39;z_min&#39;</span><span class="p">],</span>
+            <span class="n">min_data_2D_1arg</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">][</span><span class="s1">&#39;z_min&#39;</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">all</span><span class="p">(</span>
+            <span class="n">min_data_2D_2args</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">][</span><span class="s1">&#39;coords_min&#39;</span><span class="p">]</span>
+            <span class="o">==</span>
+            <span class="n">min_data_2D_1arg</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">][</span><span class="s1">&#39;coords_min&#39;</span><span class="p">]</span>
+        <span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+            <span class="n">min_data_2D_2args</span><span class="p">[</span><span class="s1">&#39;likelihood_ewpt.yaml&#39;</span><span class="p">][</span><span class="s1">&#39;z_min&#39;</span><span class="p">],</span>
+            <span class="n">min_data_2D_1arg</span><span class="p">[</span><span class="s1">&#39;likelihood_ewpt.yaml&#39;</span><span class="p">][</span><span class="s1">&#39;z_min&#39;</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">all</span><span class="p">(</span>
+            <span class="n">min_data_2D_2args</span><span class="p">[</span><span class="s1">&#39;likelihood_ewpt.yaml&#39;</span><span class="p">][</span><span class="s1">&#39;coords_min&#39;</span><span class="p">]</span>
+            <span class="o">==</span>
+            <span class="n">min_data_2D_1arg</span><span class="p">[</span><span class="s1">&#39;likelihood_ewpt.yaml&#39;</span><span class="p">][</span><span class="s1">&#39;coords_min&#39;</span><span class="p">]</span>
+        <span class="p">))</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertWarns</span><span class="p">(</span><span class="ne">UserWarning</span><span class="p">):</span>
+            <span class="n">gl_ewpt</span><span class="o">.</span><span class="n">chi2_min</span><span class="p">(</span>
+                <span class="n">wc_fct_2D_2args</span><span class="p">,</span>
+                <span class="mf">91.1876</span><span class="p">,</span>
+                <span class="n">n</span><span class="o">=</span><span class="mi">2</span>
+            <span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+            <span class="n">gl_ewpt</span><span class="o">.</span><span class="n">chi2_min</span><span class="p">(</span>
+                <span class="n">wc_fct_1D</span><span class="p">,</span>
+                <span class="mf">91.1876</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+            <span class="n">gl_ewpt</span><span class="o">.</span><span class="n">chi2_min</span><span class="p">(</span>
+                <span class="n">wc_fct_2D_1arg</span><span class="p">,</span>
+                <span class="mf">91.1876</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="c1"># define a global function for multiprocessing</span>
+        <span class="k">global</span> <span class="n">_wc_fct_2D_2args</span>
+        <span class="k">def</span> <span class="nf">_wc_fct_2D_2args</span><span class="p">(</span><span class="n">S</span><span class="p">,</span><span class="n">T</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s1">&#39;phiWB&#39;</span><span class="p">:</span> <span class="n">S</span> <span class="o">*</span> <span class="mf">7.643950529889027e-08</span><span class="p">,</span>
+                <span class="s1">&#39;phiD&#39;</span><span class="p">:</span> <span class="o">-</span><span class="n">T</span> <span class="o">*</span> <span class="mf">2.5793722852276787e-07</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="n">min_data_2D_2threads</span> <span class="o">=</span> <span class="n">gl_ewpt</span><span class="o">.</span><span class="n">chi2_min</span><span class="p">(</span>
+            <span class="n">_wc_fct_2D_2args</span><span class="p">,</span>
+            <span class="mf">91.1876</span><span class="p">,</span>
+            <span class="n">threads</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">min_data_2D_2threads</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">][</span><span class="s1">&#39;coords_min&#39;</span><span class="p">]),</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">min_data_2D_2threads</span><span class="p">[</span><span class="s1">&#39;likelihood_ewpt.yaml&#39;</span><span class="p">][</span><span class="s1">&#39;coords_min&#39;</span><span class="p">]),</span>
+            <span class="mi">2</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+            <span class="n">min_data_2D_2threads</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">][</span><span class="s1">&#39;z_min&#39;</span><span class="p">],</span>
+            <span class="n">min_data_2D_2args</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">][</span><span class="s1">&#39;z_min&#39;</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+            <span class="n">min_data_2D_2threads</span><span class="p">[</span><span class="s1">&#39;likelihood_ewpt.yaml&#39;</span><span class="p">][</span><span class="s1">&#39;z_min&#39;</span><span class="p">],</span>
+            <span class="n">min_data_2D_2args</span><span class="p">[</span><span class="s1">&#39;likelihood_ewpt.yaml&#39;</span><span class="p">][</span><span class="s1">&#39;z_min&#39;</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">all</span><span class="p">(</span>
+            <span class="n">min_data_2D_2threads</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">][</span><span class="s1">&#39;coords_min&#39;</span><span class="p">]</span>
+            <span class="o">==</span>
+            <span class="n">min_data_2D_2args</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">][</span><span class="s1">&#39;coords_min&#39;</span><span class="p">]</span>
+        <span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">all</span><span class="p">(</span>
+            <span class="n">min_data_2D_2threads</span><span class="p">[</span><span class="s1">&#39;likelihood_ewpt.yaml&#39;</span><span class="p">][</span><span class="s1">&#39;coords_min&#39;</span><span class="p">]</span>
+            <span class="o">==</span>
+            <span class="n">min_data_2D_2args</span><span class="p">[</span><span class="s1">&#39;likelihood_ewpt.yaml&#39;</span><span class="p">][</span><span class="s1">&#39;coords_min&#39;</span><span class="p">]</span>
+        <span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">test_custom_likelihoods</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">GlobalLikelihood</span><span class="p">,</span>
+                          <span class="n">custom_likelihoods</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;with_typo&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;deltaMs&quot;</span><span class="p">]})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">GlobalLikelihood</span><span class="p">,</span>
+                          <span class="n">include_likelihoods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;likelihood_ewpt.yaml&quot;</span><span class="p">],</span>
+                          <span class="n">custom_likelihoods</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;not_included&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;DeltaM_s&quot;</span><span class="p">]})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">GlobalLikelihood</span><span class="p">,</span>
+                          <span class="n">exclude_likelihoods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;likelihood_ewpt.yaml&quot;</span><span class="p">],</span>
+                          <span class="n">custom_likelihoods</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;excluded&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;m_W&quot;</span><span class="p">]})</span>
 </pre></div>
 
   </div>
@@ -3644,6 +3905,165 @@ block, allowing further test code to be executed.</p></div>
   
             
   <div class="item">
+    <div class="name def" id="smelli.test_classes.TestGlobalLikelihood.test_chi2_min">
+    <p>def <span class="ident">test_chi2_min</span>(</p><p>self)</p>
+    </div>
+    
+
+    
+  
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-smelli.test_classes.TestGlobalLikelihood.test_chi2_min', this);">Show source &equiv;</a></p>
+  <div id="source-smelli.test_classes.TestGlobalLikelihood.test_chi2_min" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">test_chi2_min</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="n">gl_ewpt</span> <span class="o">=</span> <span class="n">GlobalLikelihood</span><span class="p">(</span><span class="n">fix_ckm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">include_likelihoods</span><span class="o">=</span><span class="p">[</span>
+        <span class="s1">&#39;likelihood_ewpt.yaml&#39;</span><span class="p">,</span>
+    <span class="p">])</span>
+    <span class="k">def</span> <span class="nf">wc_fct_2D_2args</span><span class="p">(</span><span class="n">S</span><span class="p">,</span><span class="n">T</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;phiWB&#39;</span><span class="p">:</span> <span class="n">S</span> <span class="o">*</span> <span class="mf">7.643950529889027e-08</span><span class="p">,</span>
+            <span class="s1">&#39;phiD&#39;</span><span class="p">:</span> <span class="o">-</span><span class="n">T</span> <span class="o">*</span> <span class="mf">2.5793722852276787e-07</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="k">def</span> <span class="nf">wc_fct_2D_1arg</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="n">S</span><span class="p">,</span><span class="n">T</span> <span class="o">=</span> <span class="n">x</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;phiWB&#39;</span><span class="p">:</span> <span class="n">S</span> <span class="o">*</span> <span class="mf">7.643950529889027e-08</span><span class="p">,</span>
+            <span class="s1">&#39;phiD&#39;</span><span class="p">:</span> <span class="o">-</span><span class="n">T</span> <span class="o">*</span> <span class="mf">2.5793722852276787e-07</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="k">def</span> <span class="nf">wc_fct_1D</span><span class="p">(</span><span class="n">S</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;phiWB&#39;</span><span class="p">:</span> <span class="n">S</span> <span class="o">*</span> <span class="mf">7.643950529889027e-08</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="n">min_data_2D_2args</span> <span class="o">=</span> <span class="n">gl_ewpt</span><span class="o">.</span><span class="n">chi2_min</span><span class="p">(</span>
+        <span class="n">wc_fct_2D_2args</span><span class="p">,</span>
+        <span class="mf">91.1876</span>
+    <span class="p">)</span>
+    <span class="n">min_data_2D_1arg</span> <span class="o">=</span> <span class="n">gl_ewpt</span><span class="o">.</span><span class="n">chi2_min</span><span class="p">(</span>
+        <span class="n">wc_fct_2D_1arg</span><span class="p">,</span>
+        <span class="mf">91.1876</span><span class="p">,</span>
+        <span class="n">n</span><span class="o">=</span><span class="mi">2</span>
+    <span class="p">)</span>
+    <span class="n">min_data_1D</span> <span class="o">=</span> <span class="n">gl_ewpt</span><span class="o">.</span><span class="n">chi2_min</span><span class="p">(</span>
+        <span class="n">wc_fct_1D</span><span class="p">,</span>
+        <span class="mf">91.1876</span><span class="p">,</span>
+        <span class="n">n</span><span class="o">=</span><span class="mi">1</span>
+    <span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">min_data_1D</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">][</span><span class="s1">&#39;coords_min&#39;</span><span class="p">]),</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">min_data_2D_2args</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">][</span><span class="s1">&#39;coords_min&#39;</span><span class="p">]),</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+        <span class="nb">len</span><span class="p">(</span><span class="n">min_data_1D</span><span class="p">[</span><span class="s1">&#39;likelihood_ewpt.yaml&#39;</span><span class="p">][</span><span class="s1">&#39;coords_min&#39;</span><span class="p">]),</span>
+        <span class="mi">1</span>
+    <span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+        <span class="nb">len</span><span class="p">(</span><span class="n">min_data_2D_2args</span><span class="p">[</span><span class="s1">&#39;likelihood_ewpt.yaml&#39;</span><span class="p">][</span><span class="s1">&#39;coords_min&#39;</span><span class="p">]),</span>
+        <span class="mi">2</span>
+    <span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+        <span class="n">min_data_2D_2args</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">][</span><span class="s1">&#39;z_min&#39;</span><span class="p">],</span>
+        <span class="n">min_data_2D_1arg</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">][</span><span class="s1">&#39;z_min&#39;</span><span class="p">],</span>
+    <span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">all</span><span class="p">(</span>
+        <span class="n">min_data_2D_2args</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">][</span><span class="s1">&#39;coords_min&#39;</span><span class="p">]</span>
+        <span class="o">==</span>
+        <span class="n">min_data_2D_1arg</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">][</span><span class="s1">&#39;coords_min&#39;</span><span class="p">]</span>
+    <span class="p">))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+        <span class="n">min_data_2D_2args</span><span class="p">[</span><span class="s1">&#39;likelihood_ewpt.yaml&#39;</span><span class="p">][</span><span class="s1">&#39;z_min&#39;</span><span class="p">],</span>
+        <span class="n">min_data_2D_1arg</span><span class="p">[</span><span class="s1">&#39;likelihood_ewpt.yaml&#39;</span><span class="p">][</span><span class="s1">&#39;z_min&#39;</span><span class="p">],</span>
+    <span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">all</span><span class="p">(</span>
+        <span class="n">min_data_2D_2args</span><span class="p">[</span><span class="s1">&#39;likelihood_ewpt.yaml&#39;</span><span class="p">][</span><span class="s1">&#39;coords_min&#39;</span><span class="p">]</span>
+        <span class="o">==</span>
+        <span class="n">min_data_2D_1arg</span><span class="p">[</span><span class="s1">&#39;likelihood_ewpt.yaml&#39;</span><span class="p">][</span><span class="s1">&#39;coords_min&#39;</span><span class="p">]</span>
+    <span class="p">))</span>
+    <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertWarns</span><span class="p">(</span><span class="ne">UserWarning</span><span class="p">):</span>
+        <span class="n">gl_ewpt</span><span class="o">.</span><span class="n">chi2_min</span><span class="p">(</span>
+            <span class="n">wc_fct_2D_2args</span><span class="p">,</span>
+            <span class="mf">91.1876</span><span class="p">,</span>
+            <span class="n">n</span><span class="o">=</span><span class="mi">2</span>
+        <span class="p">)</span>
+    <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+        <span class="n">gl_ewpt</span><span class="o">.</span><span class="n">chi2_min</span><span class="p">(</span>
+            <span class="n">wc_fct_1D</span><span class="p">,</span>
+            <span class="mf">91.1876</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+        <span class="n">gl_ewpt</span><span class="o">.</span><span class="n">chi2_min</span><span class="p">(</span>
+            <span class="n">wc_fct_2D_1arg</span><span class="p">,</span>
+            <span class="mf">91.1876</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="c1"># define a global function for multiprocessing</span>
+    <span class="k">global</span> <span class="n">_wc_fct_2D_2args</span>
+    <span class="k">def</span> <span class="nf">_wc_fct_2D_2args</span><span class="p">(</span><span class="n">S</span><span class="p">,</span><span class="n">T</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;phiWB&#39;</span><span class="p">:</span> <span class="n">S</span> <span class="o">*</span> <span class="mf">7.643950529889027e-08</span><span class="p">,</span>
+            <span class="s1">&#39;phiD&#39;</span><span class="p">:</span> <span class="o">-</span><span class="n">T</span> <span class="o">*</span> <span class="mf">2.5793722852276787e-07</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="n">min_data_2D_2threads</span> <span class="o">=</span> <span class="n">gl_ewpt</span><span class="o">.</span><span class="n">chi2_min</span><span class="p">(</span>
+        <span class="n">_wc_fct_2D_2args</span><span class="p">,</span>
+        <span class="mf">91.1876</span><span class="p">,</span>
+        <span class="n">threads</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">min_data_2D_2threads</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">][</span><span class="s1">&#39;coords_min&#39;</span><span class="p">]),</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+        <span class="nb">len</span><span class="p">(</span><span class="n">min_data_2D_2threads</span><span class="p">[</span><span class="s1">&#39;likelihood_ewpt.yaml&#39;</span><span class="p">][</span><span class="s1">&#39;coords_min&#39;</span><span class="p">]),</span>
+        <span class="mi">2</span>
+    <span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+        <span class="n">min_data_2D_2threads</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">][</span><span class="s1">&#39;z_min&#39;</span><span class="p">],</span>
+        <span class="n">min_data_2D_2args</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">][</span><span class="s1">&#39;z_min&#39;</span><span class="p">],</span>
+    <span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+        <span class="n">min_data_2D_2threads</span><span class="p">[</span><span class="s1">&#39;likelihood_ewpt.yaml&#39;</span><span class="p">][</span><span class="s1">&#39;z_min&#39;</span><span class="p">],</span>
+        <span class="n">min_data_2D_2args</span><span class="p">[</span><span class="s1">&#39;likelihood_ewpt.yaml&#39;</span><span class="p">][</span><span class="s1">&#39;z_min&#39;</span><span class="p">],</span>
+    <span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">all</span><span class="p">(</span>
+        <span class="n">min_data_2D_2threads</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">][</span><span class="s1">&#39;coords_min&#39;</span><span class="p">]</span>
+        <span class="o">==</span>
+        <span class="n">min_data_2D_2args</span><span class="p">[</span><span class="s1">&#39;global&#39;</span><span class="p">][</span><span class="s1">&#39;coords_min&#39;</span><span class="p">]</span>
+    <span class="p">))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">all</span><span class="p">(</span>
+        <span class="n">min_data_2D_2threads</span><span class="p">[</span><span class="s1">&#39;likelihood_ewpt.yaml&#39;</span><span class="p">][</span><span class="s1">&#39;coords_min&#39;</span><span class="p">]</span>
+        <span class="o">==</span>
+        <span class="n">min_data_2D_2args</span><span class="p">[</span><span class="s1">&#39;likelihood_ewpt.yaml&#39;</span><span class="p">][</span><span class="s1">&#39;coords_min&#39;</span><span class="p">]</span>
+    <span class="p">))</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="smelli.test_classes.TestGlobalLikelihood.test_custom_likelihoods">
+    <p>def <span class="ident">test_custom_likelihoods</span>(</p><p>self)</p>
+    </div>
+    
+
+    
+  
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-smelli.test_classes.TestGlobalLikelihood.test_custom_likelihoods', this);">Show source &equiv;</a></p>
+  <div id="source-smelli.test_classes.TestGlobalLikelihood.test_custom_likelihoods" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">test_custom_likelihoods</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">GlobalLikelihood</span><span class="p">,</span>
+                      <span class="n">custom_likelihoods</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;with_typo&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;deltaMs&quot;</span><span class="p">]})</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">GlobalLikelihood</span><span class="p">,</span>
+                      <span class="n">include_likelihoods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;likelihood_ewpt.yaml&quot;</span><span class="p">],</span>
+                      <span class="n">custom_likelihoods</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;not_included&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;DeltaM_s&quot;</span><span class="p">]})</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">GlobalLikelihood</span><span class="p">,</span>
+                      <span class="n">exclude_likelihoods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;likelihood_ewpt.yaml&quot;</span><span class="p">],</span>
+                      <span class="n">custom_likelihoods</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;excluded&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;m_W&quot;</span><span class="p">]})</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
     <div class="name def" id="smelli.test_classes.TestGlobalLikelihood.test_dispatch">
     <p>def <span class="ident">test_dispatch</span>(</p><p>self)</p>
     </div>
@@ -3690,17 +4110,24 @@ block, allowing further test code to be executed.</p></div>
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-smelli.test_classes.TestGlobalLikelihood.test_incl_excl', this);">Show source &equiv;</a></p>
   <div id="source-smelli.test_classes.TestGlobalLikelihood.test_incl_excl" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">test_incl_excl</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-    <span class="n">gl</span> <span class="o">=</span> <span class="n">GlobalLikelihood</span><span class="p">(</span><span class="n">eft</span><span class="o">=</span><span class="s1">&#39;WET&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;flavio&#39;</span><span class="p">,</span> <span class="n">include_likelihoods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;fast_likelihood_quarks.yaml&#39;</span><span class="p">])</span>
+    <span class="n">gl</span> <span class="o">=</span> <span class="n">GlobalLikelihood</span><span class="p">(</span>
+        <span class="n">eft</span><span class="o">=</span><span class="s1">&#39;WET&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;flavio&#39;</span><span class="p">,</span>
+        <span class="n">include_likelihoods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;fast_likelihood_quarks.yaml&#39;</span><span class="p">])</span>
     <span class="n">ll</span> <span class="o">=</span> <span class="n">gl</span><span class="o">.</span><span class="n">parameter_point</span><span class="p">({},</span> <span class="mi">100</span><span class="p">)</span><span class="o">.</span><span class="n">log_likelihood_dict</span><span class="p">()</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">assertSetEqual</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">ll</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span> <span class="p">{</span><span class="s1">&#39;fast_likelihood_quarks.yaml&#39;</span><span class="p">,</span> <span class="s1">&#39;global&#39;</span><span class="p">})</span>
-    <span class="n">gl</span> <span class="o">=</span> <span class="n">GlobalLikelihood</span><span class="p">(</span><span class="n">eft</span><span class="o">=</span><span class="s1">&#39;WET&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;flavio&#39;</span><span class="p">,</span> <span class="n">include_likelihoods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;likelihood_lfv.yaml&#39;</span><span class="p">])</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">assertSetEqual</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">ll</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span>
+                        <span class="p">{</span><span class="s1">&#39;fast_likelihood_quarks.yaml&#39;</span><span class="p">,</span> <span class="s1">&#39;global&#39;</span><span class="p">})</span>
+    <span class="n">gl</span> <span class="o">=</span> <span class="n">GlobalLikelihood</span><span class="p">(</span><span class="n">eft</span><span class="o">=</span><span class="s1">&#39;WET&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;flavio&#39;</span><span class="p">,</span>
+                          <span class="n">include_likelihoods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;likelihood_lfv.yaml&#39;</span><span class="p">])</span>
     <span class="n">ll</span> <span class="o">=</span> <span class="n">gl</span><span class="o">.</span><span class="n">parameter_point</span><span class="p">({},</span> <span class="mi">100</span><span class="p">)</span><span class="o">.</span><span class="n">log_likelihood_dict</span><span class="p">()</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">assertSetEqual</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">ll</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span> <span class="p">{</span><span class="s1">&#39;likelihood_lfv.yaml&#39;</span><span class="p">,</span> <span class="s1">&#39;global&#39;</span><span class="p">})</span>
-    <span class="n">gl</span> <span class="o">=</span> <span class="n">GlobalLikelihood</span><span class="p">(</span><span class="n">eft</span><span class="o">=</span><span class="s1">&#39;WET&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;flavio&#39;</span><span class="p">,</span> <span class="n">exclude_likelihoods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;likelihood_lfv.yaml&#39;</span><span class="p">])</span>
+    <span class="n">gl</span> <span class="o">=</span> <span class="n">GlobalLikelihood</span><span class="p">(</span><span class="n">eft</span><span class="o">=</span><span class="s1">&#39;WET&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;flavio&#39;</span><span class="p">,</span>
+                          <span class="n">exclude_likelihoods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;likelihood_lfv.yaml&#39;</span><span class="p">])</span>
     <span class="n">ll</span> <span class="o">=</span> <span class="n">gl</span><span class="o">.</span><span class="n">parameter_point</span><span class="p">({},</span> <span class="mi">100</span><span class="p">)</span><span class="o">.</span><span class="n">log_likelihood_dict</span><span class="p">()</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">assertNotIn</span><span class="p">(</span><span class="s1">&#39;likelihood_lfv.yaml&#39;</span><span class="p">,</span> <span class="nb">set</span><span class="p">(</span><span class="n">ll</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">GlobalLikelihood</span><span class="p">,</span> <span class="n">include_likelihoods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;nonexistent_likelihood.yaml&quot;</span><span class="p">])</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">GlobalLikelihood</span><span class="p">,</span> <span class="n">exclude_likelihoods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;nonexistent_likelihood.yaml&quot;</span><span class="p">])</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">GlobalLikelihood</span><span class="p">,</span>
+                      <span class="n">include_likelihoods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;nonexistent_likelihood.yaml&quot;</span><span class="p">])</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">GlobalLikelihood</span><span class="p">,</span>
+                      <span class="n">exclude_likelihoods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;nonexistent_likelihood.yaml&quot;</span><span class="p">])</span>
 </pre></div>
 
   </div>
