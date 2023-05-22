@@ -10,7 +10,7 @@ for ll_name, ll in chain(gl.likelihoods.items(), gl.fast_likelihoods.items()):
     for obs_info in ll.observables:
         # Either a string with the name of the obs, or a tuple whose first 
         # element is the name, and others are the arguments passed.
-        # For python3.10+, we can use match case since I think it's cool :)
+        # For python3.10+, we can use match case since I just think they're neat
         match obs_info:
             case (name, *args):
                 pass
