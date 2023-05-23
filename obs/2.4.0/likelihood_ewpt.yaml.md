@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Observables
+title: Observables - likelihood_ewpt.yaml
 ---
 
 # List of all observables included in likelihood_ewpt.yaml

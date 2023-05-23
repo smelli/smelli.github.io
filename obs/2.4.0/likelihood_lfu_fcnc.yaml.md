@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Observables
+title: Observables - likelihood_lfu_fcnc.yaml
 ---
 
 # List of all observables included in likelihood_lfu_fcnc.yaml

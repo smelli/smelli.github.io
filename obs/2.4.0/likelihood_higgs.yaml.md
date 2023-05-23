@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Observables
+title: Observables - likelihood_higgs.yaml
 ---
 
 # List of all observables included in likelihood_higgs.yaml

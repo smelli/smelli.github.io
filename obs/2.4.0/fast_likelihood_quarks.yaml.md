@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Observables
+title: Observables - fast_likelihood_quarks.yaml
 ---
 
 # List of all observables included in fast_likelihood_quarks.yaml

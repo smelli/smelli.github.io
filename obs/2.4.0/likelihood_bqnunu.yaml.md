@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Observables
+title: Observables - likelihood_bqnunu.yaml
 ---
 
 # List of all observables included in likelihood_bqnunu.yaml

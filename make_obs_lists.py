@@ -10,10 +10,10 @@ makedirs(folder, exist_ok=True)
 
 observables_header = """---
 layout: default
-title: Observables
+title: Observables - {0}
 ---
 
-# List of all observables included in {}
+# List of all observables included in {0}
 
 {{: class="table"}}
 | Symbol | Name | Arguments |

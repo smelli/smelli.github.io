@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Observables
+title: Observables - likelihood_bcpv.yaml
 ---
 
 # List of all observables included in likelihood_bcpv.yaml
