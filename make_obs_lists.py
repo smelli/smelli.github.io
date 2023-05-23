@@ -39,5 +39,5 @@ for ll_name, ll in chain(gl.likelihoods.items(), gl.fast_likelihoods.items()):
             if args:
                 args_info = zip(o.arguments, args)
                 text += ", ".join(f"{name} = {value}" for name, value in args_info)
-            text += "|\n"
+            text += " |\n"
             f.write(text)
