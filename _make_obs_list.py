@@ -41,3 +41,20 @@ for ll_name, ll in chain(gl.likelihoods.items(), gl.fast_likelihoods.items()):
                 text += ", ".join(f"{name} = {value}" for name, value in args_info)
             text += " |\n"
             f.write(text)
+
+
+
+index_header = """---
+layout: default
+title: Likelihoods in smelli v{0}
+---
+
+# List of likelihoods in smelli v{0}
+
+"""
+
+print(f"Writing index for smelli v{smelli_ver}")
+with open(f"{folder}/index.md", "w") as f:
+    f.write(index_header.format(smelli_ver))
+    for ll_name in chain(gl.likelihoods.keys(), gl.fast_likelihoods.keys()):
+        f.write("[{0}]({0})\n\n".format(ll_name))
