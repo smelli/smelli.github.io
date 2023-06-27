@@ -26,6 +26,8 @@ python3 -m pip install smelli --user
 
 A brief user manual can be found in the paper cited below.
 
+A list of observables included in each likelihood in the current version can be found [here](obs/current/).
+
 ## Citation
 
 If you use `smelli` in a scientific publication, please cite
