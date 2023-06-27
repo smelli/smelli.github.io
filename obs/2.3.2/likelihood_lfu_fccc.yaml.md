@@ -70,4 +70,3 @@ title: Observables - likelihood_lfu_fccc.yaml
 | $\frac{\langle \text{BR} \rangle}{\text{BR}}(B\to D^\ast\tau^+\nu)$ | `<BR>/BR(B->D*taunu)` | q2min = 10.5, q2max = 11.0 |
 | $\text{BR}(\pi^+\to e^+\nu)$ | `BR(pi+->enu)` |  |
 | $R_{e\mu}(K^+\to \ell^+\nu)$ | `Remu(K+->lnu)` |  |
-| $\text{BR}(B^+\to e^+\nu)$ | `BR(B+->enu)` |  |

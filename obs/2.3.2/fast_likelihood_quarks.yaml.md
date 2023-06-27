@@ -185,6 +185,7 @@ title: Observables - fast_likelihood_quarks.yaml
 | $\langle P_1\rangle(B^0\to K^{\ast 0}e^+e^-)$ | `<P1>(B0->K*ee)` | q2min = 0.000784, q2max = 0.257 |
 | $\langle A_T^\text{Im}\rangle(B^0\to K^{\ast 0}e^+e^-)$ | `<ATIm>(B0->K*ee)` | q2min = 0.000784, q2max = 0.257 |
 | $\text{BR}(B^0\to \pi^- \tau^+\nu_\tau)$ | `BR(B0->pitaunu)` |  |
+| $\text{BR}(B^+\to e^+\nu)$ | `BR(B+->enu)` |  |
 | $\text{BR}(B^+\to \mu^+\nu)$ | `BR(B+->munu)` |  |
 | $\Delta M_s$ | `DeltaM_s` |  |
 | $x_{12}^{\text{Im},D}$ | `x12Im_D` |  |
@@ -207,84 +208,6 @@ title: Observables - fast_likelihood_quarks.yaml
 | $\text{BR}(K^+\to \pi^0\mu^+\nu)$ | `BR(K+->pimunu)` |  |
 | $\ln(C)(K^+\to \pi^0\mu^+\nu)$ | `lnC(K->pimunu)` |  |
 | $R_T(K^+\to \pi^0\mu^+\nu)$ | `RT(K->pimunu)` |  |
-| $\text{BR}(D^+\to e^+\nu_e)$ | `BR(D+->enu)` |  |
-| $\text{BR}(D^+\to \mu^+\nu_\mu)$ | `BR(D+->munu)` |  |
-| $\text{BR}(D^+\to \tau^+\nu_\tau)$ | `BR(D+->taunu)` |  |
-| $\text{BR}(D_s\to e^+\nu_e)$ | `BR(Ds->enu)` |  |
-| $\text{BR}(D_s\to \mu^+\nu_\mu)$ | `BR(Ds->munu)` |  |
-| $\text{BR}(D_s\to \tau^+\nu_\tau)$ | `BR(Ds->taunu)` |  |
-| $\text{BR}(D^0\to \pi^- \mu^+\nu_\mu)$ | `BR(D0->pimunu)` |  |
-| $\text{BR}(D^0\to \pi^- e^+\nu_e)$ | `BR(D0->pienu)` |  |
-| $\text{BR}(D^0\to K^- e^+\nu_e)$ | `BR(D0->Kenu)` |  |
-| $\text{BR}(D^0\to K^- \mu^+\nu_\mu)$ | `BR(D0->Kmunu)` |  |
-| $\text{BR}(D^+\to \pi^0e^+\nu_e)$ | `BR(D+->pienu)` |  |
-| $\text{BR}(D^+\to \pi^0\mu^+\nu_\mu)$ | `BR(D+->pimunu)` |  |
-| $\text{BR}(D^+\to K^0e^+\nu_e)$ | `BR(D+->Kenu)` |  |
-| $\text{BR}(D^+\to K^0\mu^+\nu_\mu)$ | `BR(D+->Kmunu)` |  |
-| $\langle\text{BR}\rangle(D^0\to \pi^- e^+\nu_e)$ | `<BR>(D0->pienu)` | q2min = 0.0, q2max = 0.3 |
-| $\langle\text{BR}\rangle(D^0\to \pi^- e^+\nu_e)$ | `<BR>(D0->pienu)` | q2min = 0.3, q2max = 0.6 |
-| $\langle\text{BR}\rangle(D^0\to \pi^- e^+\nu_e)$ | `<BR>(D0->pienu)` | q2min = 0.6, q2max = 0.9 |
-| $\langle\text{BR}\rangle(D^0\to \pi^- e^+\nu_e)$ | `<BR>(D0->pienu)` | q2min = 0.9, q2max = 1.2 |
-| $\langle\text{BR}\rangle(D^0\to \pi^- e^+\nu_e)$ | `<BR>(D0->pienu)` | q2min = 1.2, q2max = 1.5 |
-| $\langle\text{BR}\rangle(D^0\to \pi^- e^+\nu_e)$ | `<BR>(D0->pienu)` | q2min = 1.5, q2max = 2 |
-| $\langle\text{BR}\rangle(D^0\to \pi^- e^+\nu_e)$ | `<BR>(D0->pienu)` | q2min = 2, q2max = 2.98 |
-| $\langle\text{BR}\rangle(D^+\to \pi^0e^+\nu_e)$ | `<BR>(D+->pienu)` | q2min = 0.0, q2max = 0.3 |
-| $\langle\text{BR}\rangle(D^+\to \pi^0e^+\nu_e)$ | `<BR>(D+->pienu)` | q2min = 0.3, q2max = 0.6 |
-| $\langle\text{BR}\rangle(D^+\to \pi^0e^+\nu_e)$ | `<BR>(D+->pienu)` | q2min = 0.6, q2max = 0.9 |
-| $\langle\text{BR}\rangle(D^+\to \pi^0e^+\nu_e)$ | `<BR>(D+->pienu)` | q2min = 0.9, q2max = 1.2 |
-| $\langle\text{BR}\rangle(D^+\to \pi^0e^+\nu_e)$ | `<BR>(D+->pienu)` | q2min = 1.2, q2max = 1.5 |
-| $\langle\text{BR}\rangle(D^+\to \pi^0e^+\nu_e)$ | `<BR>(D+->pienu)` | q2min = 1.5, q2max = 2 |
-| $\langle\text{BR}\rangle(D^+\to \pi^0e^+\nu_e)$ | `<BR>(D+->pienu)` | q2min = 2, q2max = 2.98 |
-| $\langle\text{BR}\rangle(D^0\to \pi^- e^+\nu_e)$ | `<BR>(D0->pienu)` | q2min = 0.0, q2max = 0.2 |
-| $\langle\text{BR}\rangle(D^0\to \pi^- e^+\nu_e)$ | `<BR>(D0->pienu)` | q2min = 0.2, q2max = 0.4 |
-| $\langle\text{BR}\rangle(D^0\to \pi^- e^+\nu_e)$ | `<BR>(D0->pienu)` | q2min = 0.4, q2max = 0.6 |
-| $\langle\text{BR}\rangle(D^0\to \pi^- e^+\nu_e)$ | `<BR>(D0->pienu)` | q2min = 0.6, q2max = 0.8 |
-| $\langle\text{BR}\rangle(D^0\to \pi^- e^+\nu_e)$ | `<BR>(D0->pienu)` | q2min = 0.8, q2max = 1.0 |
-| $\langle\text{BR}\rangle(D^0\to \pi^- e^+\nu_e)$ | `<BR>(D0->pienu)` | q2min = 1.0, q2max = 1.2 |
-| $\langle\text{BR}\rangle(D^0\to \pi^- e^+\nu_e)$ | `<BR>(D0->pienu)` | q2min = 1.2, q2max = 1.4 |
-| $\langle\text{BR}\rangle(D^0\to \pi^- e^+\nu_e)$ | `<BR>(D0->pienu)` | q2min = 1.4, q2max = 1.6 |
-| $\langle\text{BR}\rangle(D^0\to \pi^- e^+\nu_e)$ | `<BR>(D0->pienu)` | q2min = 1.6, q2max = 1.8 |
-| $\langle\text{BR}\rangle(D^0\to \pi^- e^+\nu_e)$ | `<BR>(D0->pienu)` | q2min = 1.8, q2max = 2.0 |
-| $\langle\text{BR}\rangle(D^0\to \pi^- e^+\nu_e)$ | `<BR>(D0->pienu)` | q2min = 2.0, q2max = 2.2 |
-| $\langle\text{BR}\rangle(D^0\to \pi^- e^+\nu_e)$ | `<BR>(D0->pienu)` | q2min = 2.2, q2max = 2.4 |
-| $\langle\text{BR}\rangle(D^0\to \pi^- e^+\nu_e)$ | `<BR>(D0->pienu)` | q2min = 2.4, q2max = 2.6 |
-| $\langle\text{BR}\rangle(D^0\to \pi^- e^+\nu_e)$ | `<BR>(D0->pienu)` | q2min = 2.6, q2max = 2.98 |
-| $\langle\text{BR}\rangle(D^0\to K^- e^+\nu_e)$ | `<BR>(D0->Kenu)` | q2min = 0.0, q2max = 0.2 |
-| $\langle\text{BR}\rangle(D^0\to K^- e^+\nu_e)$ | `<BR>(D0->Kenu)` | q2min = 0.2, q2max = 0.4 |
-| $\langle\text{BR}\rangle(D^0\to K^- e^+\nu_e)$ | `<BR>(D0->Kenu)` | q2min = 0.4, q2max = 0.6 |
-| $\langle\text{BR}\rangle(D^0\to K^- e^+\nu_e)$ | `<BR>(D0->Kenu)` | q2min = 0.6, q2max = 0.8 |
-| $\langle\text{BR}\rangle(D^0\to K^- e^+\nu_e)$ | `<BR>(D0->Kenu)` | q2min = 0.8, q2max = 1.0 |
-| $\langle\text{BR}\rangle(D^0\to K^- e^+\nu_e)$ | `<BR>(D0->Kenu)` | q2min = 1.0, q2max = 1.2 |
-| $\langle\text{BR}\rangle(D^0\to K^- e^+\nu_e)$ | `<BR>(D0->Kenu)` | q2min = 1.2, q2max = 1.4 |
-| $\langle\text{BR}\rangle(D^0\to K^- e^+\nu_e)$ | `<BR>(D0->Kenu)` | q2min = 1.4, q2max = 1.6 |
-| $\langle\text{BR}\rangle(D^0\to K^- e^+\nu_e)$ | `<BR>(D0->Kenu)` | q2min = 1.6, q2max = 1.88 |
-| $\langle\text{BR}\rangle(D^+\to K^0e^+\nu_e)$ | `<BR>(D+->Kenu)` | q2min = 0.0, q2max = 0.2 |
-| $\langle\text{BR}\rangle(D^+\to K^0e^+\nu_e)$ | `<BR>(D+->Kenu)` | q2min = 0.2, q2max = 0.4 |
-| $\langle\text{BR}\rangle(D^+\to K^0e^+\nu_e)$ | `<BR>(D+->Kenu)` | q2min = 0.4, q2max = 0.6 |
-| $\langle\text{BR}\rangle(D^+\to K^0e^+\nu_e)$ | `<BR>(D+->Kenu)` | q2min = 0.6, q2max = 0.8 |
-| $\langle\text{BR}\rangle(D^+\to K^0e^+\nu_e)$ | `<BR>(D+->Kenu)` | q2min = 0.8, q2max = 1.0 |
-| $\langle\text{BR}\rangle(D^+\to K^0e^+\nu_e)$ | `<BR>(D+->Kenu)` | q2min = 1.0, q2max = 1.2 |
-| $\langle\text{BR}\rangle(D^+\to K^0e^+\nu_e)$ | `<BR>(D+->Kenu)` | q2min = 1.2, q2max = 1.4 |
-| $\langle\text{BR}\rangle(D^+\to K^0e^+\nu_e)$ | `<BR>(D+->Kenu)` | q2min = 1.4, q2max = 1.6 |
-| $\langle\text{BR}\rangle(D^+\to K^0e^+\nu_e)$ | `<BR>(D+->Kenu)` | q2min = 1.6, q2max = 1.88 |
-| $\langle\text{BR}\rangle(D^0\to K^- e^+\nu_e)$ | `<BR>(D0->Kenu)` | q2min = 0.0, q2max = 0.1 |
-| $\langle\text{BR}\rangle(D^0\to K^- e^+\nu_e)$ | `<BR>(D0->Kenu)` | q2min = 0.1, q2max = 0.2 |
-| $\langle\text{BR}\rangle(D^0\to K^- e^+\nu_e)$ | `<BR>(D0->Kenu)` | q2min = 0.2, q2max = 0.3 |
-| $\langle\text{BR}\rangle(D^0\to K^- e^+\nu_e)$ | `<BR>(D0->Kenu)` | q2min = 0.3, q2max = 0.4 |
-| $\langle\text{BR}\rangle(D^0\to K^- e^+\nu_e)$ | `<BR>(D0->Kenu)` | q2min = 0.4, q2max = 0.5 |
-| $\langle\text{BR}\rangle(D^0\to K^- e^+\nu_e)$ | `<BR>(D0->Kenu)` | q2min = 0.5, q2max = 0.6 |
-| $\langle\text{BR}\rangle(D^0\to K^- e^+\nu_e)$ | `<BR>(D0->Kenu)` | q2min = 0.6, q2max = 0.7 |
-| $\langle\text{BR}\rangle(D^0\to K^- e^+\nu_e)$ | `<BR>(D0->Kenu)` | q2min = 0.7, q2max = 0.8 |
-| $\langle\text{BR}\rangle(D^0\to K^- e^+\nu_e)$ | `<BR>(D0->Kenu)` | q2min = 0.8, q2max = 0.9 |
-| $\langle\text{BR}\rangle(D^0\to K^- e^+\nu_e)$ | `<BR>(D0->Kenu)` | q2min = 0.9, q2max = 1.0 |
-| $\langle\text{BR}\rangle(D^0\to K^- e^+\nu_e)$ | `<BR>(D0->Kenu)` | q2min = 1.0, q2max = 1.1 |
-| $\langle\text{BR}\rangle(D^0\to K^- e^+\nu_e)$ | `<BR>(D0->Kenu)` | q2min = 1.1, q2max = 1.2 |
-| $\langle\text{BR}\rangle(D^0\to K^- e^+\nu_e)$ | `<BR>(D0->Kenu)` | q2min = 1.2, q2max = 1.3 |
-| $\langle\text{BR}\rangle(D^0\to K^- e^+\nu_e)$ | `<BR>(D0->Kenu)` | q2min = 1.3, q2max = 1.4 |
-| $\langle\text{BR}\rangle(D^0\to K^- e^+\nu_e)$ | `<BR>(D0->Kenu)` | q2min = 1.4, q2max = 1.5 |
-| $\langle\text{BR}\rangle(D^0\to K^- e^+\nu_e)$ | `<BR>(D0->Kenu)` | q2min = 1.5, q2max = 1.6 |
-| $\langle\text{BR}\rangle(D^0\to K^- e^+\nu_e)$ | `<BR>(D0->Kenu)` | q2min = 1.6, q2max = 1.7 |
-| $\langle\text{BR}\rangle(D^0\to K^- e^+\nu_e)$ | `<BR>(D0->Kenu)` | q2min = 1.7, q2max = 1.88 |
 | $\tau_n$ | `tau_n` | me_E = 0.655 |
 | $\tilde{A}_n$ | `Atilde_n` | me_E = 0.559 |
 | $\tilde{A}_n$ | `Atilde_n` | me_E = 0.586 |
@@ -309,8 +232,3 @@ title: Observables - fast_likelihood_quarks.yaml
 | $\mathcal{F}t({}^{62}\text{Ga})$ | `Ft(62Ga)` |  |
 | $\mathcal{F}t({}^{74}\text{Rb})$ | `Ft(74Rb)` |  |
 | $\Gamma(\pi^+\to \mu^+\nu)$ | `Gamma(pi+->munu)` |  |
-| $\langle \frac{d\text{BR}}{dq^2} \rangle(B^\pm\to \pi^\pm \mu^+\mu^-)$ | `<dBR/dq2>(B+->pimumu)` | q2min = 2, q2max = 4 |
-| $\langle \frac{d\text{BR}}{dq^2} \rangle(B^\pm\to \pi^\pm \mu^+\mu^-)$ | `<dBR/dq2>(B+->pimumu)` | q2min = 4, q2max = 6 |
-| $\langle \frac{d\text{BR}}{dq^2} \rangle(B^\pm\to \pi^\pm \mu^+\mu^-)$ | `<dBR/dq2>(B+->pimumu)` | q2min = 15, q2max = 22 |
-| $\overline{\text{BR}}(B_s\to K^* \mu^+\mu^-)$ | `BR_LHCb(Bs->K*0mumu)` |  |
-| $\text{BR}(B^\pm\to \pi^\pm e^+e^-)$ | `BR_Belle(B+->piee)` |  |
