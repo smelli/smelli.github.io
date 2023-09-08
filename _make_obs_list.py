@@ -16,8 +16,8 @@ title: Observables - {0}
 # List of all observables included in {0}
 
 {{: class="table"}}
-| Symbol | Name | Arguments |
-|------|--------|--------------|
+| Symbol | Name | Arguments | SM Prediction |
+|--------|------|-----------|---------------|
 """
 
 gl = smelli.GlobalLikelihood()
@@ -39,7 +39,11 @@ for ll_name, ll in chain(gl.likelihoods.items(), gl.fast_likelihoods.items()):
             if args:
                 args_info = zip(o.arguments, args)
                 text += ", ".join(f"{name} = {value}" for name, value in args_info)
-            text += " |\n"
+            text += " |"
+            if args:
+                text += f"{flavio.sm_prediction(name, *args)} | \n"
+            else:
+                text += f"{flavio.sm_prediction(name)} | \n"
             f.write(text)
 
 
